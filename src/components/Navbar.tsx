@@ -13,10 +13,9 @@ const Navbar = () => {
       </div>
 
       <div className="flex items-center gap-10">
-        <ButtonNav name="Home" path="/"/>
-        <ButtonNav name="Histórico" path="/"/>
-        <ButtonNav name="Processo" path="/"/>
-
+        <ButtonNav name="Home" path="/" />
+        <ButtonNav name="Histórico" path="/history" />
+        <ButtonNav name="Processo" path="/process" />
       </div>
     </div>
   );
