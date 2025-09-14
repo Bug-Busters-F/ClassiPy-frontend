@@ -13,7 +13,7 @@ function ButtonNav({ name, path }: ButtonNavProps) {
         relative 
         cursor-pointer 
         text-lg
-        py-1 px-2 /* Adicionado padding para uma melhor área de clique */
+        py-1 px-2 
         transition-colors duration-300 ease-in-out
         after:content-[''] 
         after:absolute 
@@ -26,7 +26,7 @@ function ButtonNav({ name, path }: ButtonNavProps) {
         ${
           isActive
             ? "text-blue-600 after:w-full"
-            : "hover:text-blue-600 hover:after:w-full after:w-0"
+            : "text-gray-600 hover:text-blue-600 hover:after:w-full after:w-0"
         }
       `}
     >

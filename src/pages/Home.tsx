@@ -1,10 +1,11 @@
 import { NavLink } from "react-router-dom";
+import RecentPartnumber from "../components/RecentPartnumber"
 
 const Home = () => {
   return (
     <div className="px-[3%] w-screen">
       <div className="pt-8 flex justify-between">
-        <h1 className="text-4xl font-bold text-gray-800">Dashboard</h1>
+        <h2 className="text-4xl font-bold text-gray-800">Dashboard</h2>
         <NavLink
           to={"/process"}
           className={
@@ -17,6 +18,7 @@ const Home = () => {
           </div>
         </NavLink>
       </div>
+      <RecentPartnumber/>
     </div>
   );
 };
