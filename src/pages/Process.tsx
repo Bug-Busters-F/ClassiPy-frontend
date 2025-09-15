@@ -1,8 +1,11 @@
 import { useState } from "react"
 import DragAndDropUploader from "../components/DragAndDropUploader"
+import Loading from "./Loading";
+import { useNavigate } from "react-router-dom";
 
 const Process = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const navigate = useNavigate();
   const handleFileSelected = (file : File) => {
     console.log("Arquivo:", file);
     setUploadedFile(file); // upload file para backend - continuar logica aqui
@@ -13,7 +16,9 @@ const Process = () => {
       alert("Por favor, selecione um arquivo primeiro.");
       return;
     }
-    alert(`Processando o arquivo: ${uploadedFile.name}`)
+    
+    return navigate("/validate-partnumber");
+    // alert(`Processando o arquivo: ${uploadedFile.name}`)
     // upload file para IA ler - continuar logica aqui
   }
 
@@ -40,6 +45,11 @@ const Process = () => {
             <i className="fa-solid fa-robot mr-3"></i>
             Processar com IA
           </button>
+        </div>
+
+        {/* tela de loading: */}
+        <div className="flex-col items-center justify-center hidden">
+          <Loading/>
         </div>
     </div>
   )

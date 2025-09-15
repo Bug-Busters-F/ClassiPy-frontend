@@ -61,7 +61,7 @@ const DragAndDropUploader: React.FC<DragAndDropUploaderProps> = ({onFileSelect,}
     };
 
     return (
-        <div className={`w-full h-full flex flex-col items-center justify-center mx-auto p-8 text-center bg-white rounded-xl border-2 border-dashed transition-colors duration-300
+        <div className={`w-full h-full flex flex-col items-center justify-center mx-auto p-8 text-center rounded-xl border-2 border-dashed transition-colors duration-300
             ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300'}`} 
             onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}

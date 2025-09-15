@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import NotFound from "../pages/NotFound";
 import Process from "../pages/Process";
 import CenteredLayout from "../components/CenteredLayout"; 
+import ValidatePartNumber from "../pages/ValidatePartNumber";
 
 const AppRoutes = () => {
   return (
@@ -13,6 +14,7 @@ const AppRoutes = () => {
         <main className="flex flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/validate-partnumber" element={<ValidatePartNumber />} />
             <Route element={<CenteredLayout />}>
               <Route path="/process" element={<Process />} />
               <Route path="*" element={<NotFound />} />
