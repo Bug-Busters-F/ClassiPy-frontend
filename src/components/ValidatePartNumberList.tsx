@@ -1,41 +1,40 @@
-import React from 'react'
+import React from 'react';
 import type { PartNumber } from '../types/PartNumber';
 import { ValidatePartNumberRow } from './ValidatePartNumberRow';
+import { AnimatePresence } from 'framer-motion';
 
-interface ValidatePartNumberListProps{
+interface ValidatePartNumberListProps {
   partNumbers: PartNumber[];
   onUpdatePartNumber: (id: string, newValue: string) => void;
-  onAddPartNumber: () => void;
+  onDeletePartNumber: (id: string) => void;
 }
 
-
-const ValidatePartNumberList: React.FC<ValidatePartNumberListProps> = ({partNumbers, onUpdatePartNumber, onAddPartNumber}) => {
+const ValidatePartNumberList: React.FC<ValidatePartNumberListProps> = ({
+  partNumbers,
+  onUpdatePartNumber,
+  onDeletePartNumber,
+}) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 py-5 px-5">
       {/* Cabeçalho */}
-      <div className="flex justify-between gap-4 px-1 text-sm font-semibold text-gray-600">
+      <div className="grid grid-cols-[2fr_0.3fr_0.5fr] gap-4 px-1 text-sm font-semibold text-gray-600">
         <h3>Part-Number</h3>
+        <h3>Status</h3>
         <h3>Ações</h3>
       </div>
 
-      {partNumbers.map((pn) => (
-        <ValidatePartNumberRow
-          key={pn.id}
-          partNumber={pn}
-          onUpdate={onUpdatePartNumber}
-        />
-      ))}
-      
-      {/* Botão de Adicionar */}
-      <button 
-        onClick={onAddPartNumber}
-        className="flex items-center gap-2 px-4 py-2 text-blue-600 font-semibold hover:bg-blue-100 rounded-md cursor-pointer transition-all duration-300"
-      >
-        <i className="fa-solid fa-plus"></i> Adicionar Part-Number
-      </button>
+      <AnimatePresence>
+        {partNumbers.map((pn) => (
+          <ValidatePartNumberRow
+            key={pn.id} 
+            partNumber={pn}
+            onUpdate={onUpdatePartNumber}
+            onDelete={onDeletePartNumber}
+          />
+        ))}
+      </AnimatePresence>
     </div>
+  );
+};
 
-  )
-}
-
-export default ValidatePartNumberList
+export default ValidatePartNumberList;

@@ -1,7 +1,7 @@
 const RecentPartnumber = () => {
   return (
     <div>
-        <h2>Processos Recentes</h2>
+        <h2></h2>
         <table>
             <thead>
               
