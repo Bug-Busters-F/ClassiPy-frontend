@@ -1,26 +1,11 @@
-import { useState, useEffect } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import type { PartNumber } from "../types/PartNumber";
 import ValidatePartNumberList from "../components/ValidatePartNumberList";
-import Loading from "./Loading";
+import { usePartNumberContext } from "../context/PartNumberContext";
 
 const ValidatePartNumber = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const [partNumbers, setPartNumbers] = useState<PartNumber[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
-  useEffect(() => {
-    if (location.state && location.state.partNumbers) {
-      setPartNumbers(location.state.partNumbers);
-    } else {
-      console.warn("Nenhum Part Number para validar. Redirecionando...");
-      navigate("/process");
-    }
-    setIsLoading(false);
-  }, [location.state, navigate]);
+  const {partNumbers, setPartNumbers} = usePartNumberContext();
 
   const handleUpdatePartNumber = (id: string, newValue: string) => {
     setPartNumbers((currentPartNumbers) =>
@@ -37,19 +22,12 @@ const ValidatePartNumber = () => {
       country: "",
       status: "revisao",
     };
-    setPartNumbers((currentPartNumbers) => [
-      ...currentPartNumbers,
-      newPartNumber,
-    ]);
+    setPartNumbers((currentPartNumbers) => [...currentPartNumbers, newPartNumber,]);
   };
 
   const handleDeletePartNumber = (id: string) => {
     setPartNumbers((current) => current.filter((pn) => pn.id !== id));
   };
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   return (
     <div className="px-[8%] w-screen pb-10">
@@ -76,15 +54,15 @@ const ValidatePartNumber = () => {
             onDeletePartNumber={handleDeletePartNumber}
           />
         ) : (
+
           <div className="text-center py-10 px-5 text-gray-500">
-            <p>Nenhum Part-Number na lista.</p>
-            <p>Adicione um novo manualmente clicando no botão acima.</p>
+            <p>Nenhum Part-Number na lista para validar.</p>
+            <p>Adicione um novo manualmente ou inicie um novo processo.</p>
           </div>
         )}
 
         <hr className="border-gray-200" />
 
-        {/* Ações Finais */}
         <div className="flex justify-between py-5 px-5 items-center gap-4">
           <div>
             <button
@@ -100,8 +78,8 @@ const ValidatePartNumber = () => {
                 Cancelar
               </button>
             </Link>
-            <button className="px-4 py-2 bg-green-600 text-white font-semibold rounded-md cursor-pointer hover:bg-green-500 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out">
-              Confirmar Validação
+            <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md cursor-pointer hover:bg-green-500 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out">
+              <i className="fa-solid fa-file-excel"></i>Gerar Documento
             </button>
           </div>
         </div>

@@ -4,11 +4,14 @@ import { v4 as uuidv4 } from "uuid";
 import DragAndDropUploader from "../components/DragAndDropUploader";
 import Loading from "./Loading";
 import type { PartNumber, ApiResponse } from "../types/PartNumber";
+import { usePartNumberContext } from "../context/PartNumberContext";
+// import { uploadAndProcessPdf } from "../services/api";
 
 const Process = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const {setPartNumbers} = usePartNumberContext();
   const navigate = useNavigate();
 
   const handleFileSelected = (file: File) => {
@@ -34,7 +37,7 @@ const Process = () => {
         };
         console.log("Simulação concluída. Retornando dados:", mockResponse);
         resolve(mockResponse);
-      }, 2000); 
+      }, 1500); 
     });
   };
 
@@ -44,14 +47,16 @@ const Process = () => {
       alert("Por favor, selecione um arquivo primeiro.");
       return;
     }
-    
     setIsLoading(true);
     setError(null);
 
     try {
-      // usando a função MOCK em vez da chamada real substituir quando entender o back
+      //usando a função mock em vez da chamada real, substituir quando entender o back
       const response = await mockApiCall(uploadedFile);
 
+      //chamada real:
+      // const response = await uploadAndProcessPdf(uploadedFile);
+      
       const partNumbersFromApi: PartNumber[] = response.Parts.map(p => ({
         id: uuidv4(),
         value: p.PartNumber,
@@ -59,7 +64,8 @@ const Process = () => {
         status: 'revisao'
       }));
 
-      navigate("/validate-partnumber", { state: { partNumbers: partNumbersFromApi } });
+      setPartNumbers(partNumbersFromApi);
+      navigate("/validate-partnumber");
 
     } catch (err) {
       if (err instanceof Error) {
@@ -73,7 +79,7 @@ const Process = () => {
   };
 
   if (isLoading) {
-    return <Loading />;
+    return <Loading loadingTitle="Processando arquivo..." loadingMessage="Estamos processando o PDF, isso pode levar um tempo" />;
   }
 
   return (
