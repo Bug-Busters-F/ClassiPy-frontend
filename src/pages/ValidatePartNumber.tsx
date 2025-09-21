@@ -1,29 +1,23 @@
-import { useState, useEffect } from "react";
-import { useLocation, useNavigate, Link } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import type { PartNumber } from "../types/PartNumber";
 import ValidatePartNumberList from "../components/ValidatePartNumberList";
-import Loading from "./Loading";
+import { usePartNumberContext } from "../context/PartNumberContext";
 
 const ValidatePartNumber = () => {
-  const location = useLocation();
+  const {partNumbers, setPartNumbers} = usePartNumberContext();
   const navigate = useNavigate();
 
-  const [partNumbers, setPartNumbers] = useState<PartNumber[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-
   useEffect(() => {
-    if (location.state && location.state.partNumbers) {
-      setPartNumbers(location.state.partNumbers);
-    } else {
-      console.warn("Nenhum Part Number para validar. Redirecionando...");
+    if (partNumbers.length === 0) {
+      // console.warn("nao tem Part Number para validar");
       navigate("/process");
     }
-    setIsLoading(false);
-  }, [location.state, navigate]);
+  }, [partNumbers, navigate]);
 
   const handleUpdatePartNumber = (id: string, newValue: string) => {
-    setPartNumbers((currentPartNumbers) =>
+    setPartNumbers(currentPartNumbers =>
       currentPartNumbers.map((pn) =>
         pn.id === id ? { ...pn, value: newValue } : pn
       )
@@ -37,19 +31,12 @@ const ValidatePartNumber = () => {
       country: "",
       status: "revisao",
     };
-    setPartNumbers((currentPartNumbers) => [
-      ...currentPartNumbers,
-      newPartNumber,
-    ]);
+    setPartNumbers(currentPartNumbers => [...currentPartNumbers, newPartNumber]);
   };
 
   const handleDeletePartNumber = (id: string) => {
     setPartNumbers((current) => current.filter((pn) => pn.id !== id));
   };
-
-  if (isLoading) {
-    return <Loading />;
-  }
 
   return (
     <div className="px-[8%] w-screen pb-10">
