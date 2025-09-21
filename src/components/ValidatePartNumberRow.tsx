@@ -2,6 +2,7 @@ import React from "react";
 import type { PartNumber } from "../types/PartNumber";
 import StatusBadge from "./StatusBadge";
 import { motion } from "framer-motion"; 
+import { Link } from "react-router-dom";
 
 interface ValidatePartNumberRowProps {
   partNumber: PartNumber;
@@ -35,9 +36,11 @@ export const ValidatePartNumberRow: React.FC<ValidatePartNumberRowProps> = ({
       </div>
 
       <div className="flex justify-between w-full">
-        <button className="w-[45%] py-1 rounded-lg text-gray-800 cursor-pointer hover:text-white hover:bg-blue-400 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out">
-          <i className="fa-solid fa-gears fa-lg"></i><p>Classificar</p>
-        </button>
+        <Link to={`/classify/${partNumber.id}`} className="w-[45%]">
+          <button className="w-full py-1 rounded-lg text-gray-800 cursor-pointer hover:text-white hover:bg-blue-400 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out">
+            <i className="fa-solid fa-gears fa-lg"></i><p>Classificar</p>
+          </button>
+        </Link>
         <button 
           onClick={() => onDelete(partNumber.id)}
           className="w-[45%] text-red-400 hover:text-red-600 rounded-lg cursor-pointer hover:bg-red-100 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out">

@@ -45,3 +45,23 @@ export const classifyPartNumber = async (partNumberValue: string): Promise<Class
     throw new Error('Não foi possível obter a classificação da IA.');
   }
 };
+
+// --- MOCK API CALL PARA CLASSIFICAÇÃO ---
+export const mockClassifyPartNumber = (partNumberValue: string): Promise<ClassifiedData> => {
+  console.log(`Simulando classificação para o Part Number: ${partNumberValue}`);
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const mockResponse: ClassifiedData = {
+        description: `Microcontrolador ARM Cortex-M4, 32-bit, 180MHz, 512KB Flash, 128KB SRAM para o PN ${partNumberValue}`,
+        ncmCode: "8542.31.90",
+        taxRate: 16,
+        manufacturerName: "OmniChip Technologies",
+        countryOfOrigin: "Taiwan",
+        fullAddress: "123 Innovation Drive, Hsinchu Science Park, Hsinchu 300, Taiwan",
+      };
+      console.log("Simulação de classificação concluída. Retornando dados:", mockResponse);
+      resolve(mockResponse);
+    }, 1500); 
+  });
+};

@@ -7,7 +7,7 @@ export interface ClassifiedData {
   fullAddress: string;
 }
 
-export type PartNumberStatus = 'validado' | 'revisao';
+export type PartNumberStatus = 'revisao' | 'classificado';
 export interface PartNumber {
   id: string; 
   value: string; 

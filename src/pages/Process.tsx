@@ -37,7 +37,7 @@ const Process = () => {
         };
         console.log("Simulação concluída. Retornando dados:", mockResponse);
         resolve(mockResponse);
-      }, 2000); 
+      }, 1500); 
     });
   };
 
@@ -79,7 +79,7 @@ const Process = () => {
   };
 
   if (isLoading) {
-    return <Loading />;
+    return <Loading loadingTitle="Processando arquivo..." loadingMessage="Estamos processando o PDF, isso pode levar um tempo" />;
   }
 
   return (
