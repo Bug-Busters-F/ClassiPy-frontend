@@ -5,7 +5,7 @@ import DragAndDropUploader from "../components/DragAndDropUploader";
 import Loading from "./Loading";
 import type { PartNumber, ApiResponse } from "../types/PartNumber";
 import { usePartNumberContext } from "../context/PartNumberContext";
-// import { uploadAndProcessPdf } from "../services/api";
+import { uploadAndProcessPdf } from "../services/api";
 
 const Process = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -21,25 +21,25 @@ const Process = () => {
 
   // --- MOCK API CALL ---
   // Esta função simula a chamada ao backend.
-  const mockApiCall = (file: File): Promise<ApiResponse> => {
-    console.log(`Simulando processamento para o arquivo: ${file.name}`);
+  // const mockApiCall = (file: File): Promise<ApiResponse> => {
+  //   console.log(`Simulando processamento para o arquivo: ${file.name}`);
     
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Dados de exemplo que o backend retornaria
-        const mockResponse: ApiResponse = {
-          Parts: [
-            { PartNumber: "PN-MOCK-001", CountryOfOrigin: "USA" },
-            { PartNumber: "PN-MOCK-002", CountryOfOrigin: "Germany" },
-            { PartNumber: "PN-MOCK-003", CountryOfOrigin: "Japan" },
-            { PartNumber: "ABC-123-XYZ", CountryOfOrigin: "China" },
-          ],
-        };
-        console.log("Simulação concluída. Retornando dados:", mockResponse);
-        resolve(mockResponse);
-      }, 1500); 
-    });
-  };
+  //   return new Promise((resolve) => {
+  //     setTimeout(() => {
+  //       // Dados de exemplo que o backend retornaria
+  //       const mockResponse: ApiResponse = {
+  //         Parts: [
+  //           { PartNumber: "PN-MOCK-001", CountryOfOrigin: "USA" },
+  //           { PartNumber: "PN-MOCK-002", CountryOfOrigin: "Germany" },
+  //           { PartNumber: "PN-MOCK-003", CountryOfOrigin: "Japan" },
+  //           { PartNumber: "ABC-123-XYZ", CountryOfOrigin: "China" },
+  //         ],
+  //       };
+  //       console.log("Simulação concluída. Retornando dados:", mockResponse);
+  //       resolve(mockResponse);
+  //     }, 1500); 
+  //   });
+  // };
 
 
   const handleProcessFile = async () => {
@@ -52,10 +52,11 @@ const Process = () => {
 
     try {
       //usando a função mock em vez da chamada real, substituir quando entender o back
-      const response = await mockApiCall(uploadedFile);
+      // const response = await mockApiCall(uploadedFile);
 
       //chamada real:
-      // const response = await uploadAndProcessPdf(uploadedFile);
+      const response = await uploadAndProcessPdf(uploadedFile);
+      console.log("Resposta da API recebida:", response);
       
       const partNumbersFromApi: PartNumber[] = response.Parts.map(p => ({
         id: uuidv4(),

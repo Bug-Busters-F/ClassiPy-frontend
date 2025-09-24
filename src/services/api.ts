@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { ApiResponse, ClassifiedData } from '../types/PartNumber';
 
 //rotas api
-const API_URL = ''; 
+const API_URL = 'http://127.0.0.1:8000/'; 
 const CLASSIFY_API_URL = '';
 
 /**
@@ -13,10 +13,11 @@ const CLASSIFY_API_URL = '';
 
 export const uploadAndProcessPdf = async (file: File): Promise<ApiResponse> => {
   const formData = new FormData();
-  formData.append('pdfFile', file);
+  formData.append('file', file);
+  const uploadFileUrl = API_URL + 'uploadfile/'; 
 
   try {
-    const response = await axios.post<ApiResponse>(API_URL, formData, {
+    const response = await axios.post<ApiResponse>(uploadFileUrl, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
