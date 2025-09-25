@@ -8,6 +8,7 @@ export interface ClassifiedData {
 }
 
 export type PartNumberStatus = 'revisao' | 'classificado';
+
 export interface PartNumber {
   id: string; 
   value: string; 
