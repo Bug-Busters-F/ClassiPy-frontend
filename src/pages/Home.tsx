@@ -1,9 +1,12 @@
 import { NavLink } from "react-router-dom";
-import RecentPartnumber from "../components/RecentPartnumber"
+import RecentPartnumber from "../components/RecentPartnumber";
+import FadeInOnScroll from "../components/FadeInOnScroll";
+import ClassipyAdvantage from "../components/ClassipyAdvantage";
+import HowItWorks from "../components/HowItWorks";
 
 const Home = () => {
   return (
-    <div className="px-[3%] w-screen">
+    <div className="px-[10%] w-screen">
       <div className="pt-8 flex justify-between">
         <h2 className="text-4xl font-bold text-gray-800">Dashboard</h2>
         <NavLink
@@ -18,7 +21,16 @@ const Home = () => {
           </div>
         </NavLink>
       </div>
-      <RecentPartnumber/>
+      
+      <RecentPartnumber />
+
+      <FadeInOnScroll>
+        <ClassipyAdvantage />
+      </FadeInOnScroll>
+
+      <FadeInOnScroll>
+        <HowItWorks />
+      </FadeInOnScroll>
     </div>
   );
 };

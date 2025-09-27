@@ -13,8 +13,10 @@ const AppRoutes = () => {
     <PartNumberProvider>
       <Router>
         <div className="flex flex-col min-h-screen">
+          <div className="fixed top-0 left-0 w-full z-50 shadow-md">
           <Navbar />
-          <main className="flex flex-1">
+          </div>
+          <main className="flex flex-1 mt-16">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route

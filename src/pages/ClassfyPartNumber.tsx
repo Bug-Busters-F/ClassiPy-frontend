@@ -9,11 +9,10 @@ const ClassifyPartNumber = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { partNumbers, setPartNumbers } = usePartNumberContext();
-
+  
   const [classification, setClassification] = useState<ClassifiedData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const currentPartNumber = partNumbers.find(pn => pn.id === id);
 
   useEffect(() => {

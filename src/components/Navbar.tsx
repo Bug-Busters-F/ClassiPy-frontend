@@ -3,7 +3,7 @@ import ButtonNav from "./ButtonNav";
 
 const Navbar = () => {
   return (
-    <div className="px-[3%] py-4 flex items-center border justify-between border-gray-200">
+    <div className="px-[3%] py-4 flex items-center border justify-between bg-white/75 backdrop-blur-lg border-gray-200">
       <Link to={"/"}>
         <div className="flex items-center">
           <div className="bg-blue-600 rounded-md w-10 h-10 flex items-center justify-center">
