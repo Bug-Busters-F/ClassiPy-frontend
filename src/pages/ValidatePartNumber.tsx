@@ -5,7 +5,7 @@ import ValidatePartNumberList from "../components/ValidatePartNumberList";
 import { usePartNumberContext } from "../context/PartNumberContext";
 
 const ValidatePartNumber = () => {
-  const {partNumbers, setPartNumbers} = usePartNumberContext();
+  const { partNumbers, setPartNumbers } = usePartNumberContext();
 
   const handleUpdatePartNumber = (id: string, newValue: string) => {
     setPartNumbers((currentPartNumbers) =>
@@ -22,7 +22,10 @@ const ValidatePartNumber = () => {
       country: "",
       status: "revisao",
     };
-    setPartNumbers((currentPartNumbers) => [...currentPartNumbers, newPartNumber,]);
+    setPartNumbers((currentPartNumbers) => [
+      ...currentPartNumbers,
+      newPartNumber,
+    ]);
   };
 
   const handleDeletePartNumber = (id: string) => {
@@ -54,7 +57,6 @@ const ValidatePartNumber = () => {
             onDeletePartNumber={handleDeletePartNumber}
           />
         ) : (
-
           <div className="text-center py-10 px-5 text-gray-500">
             <p>Nenhum Part-Number na lista para validar.</p>
             <p>Adicione um novo manualmente ou inicie um novo processo.</p>
@@ -63,7 +65,7 @@ const ValidatePartNumber = () => {
 
         <hr className="border-gray-200" />
 
-        <div className="flex justify-between py-5 px-5 items-center gap-4">
+        <div className="flex flex-col md:flex-row justify-between py-5 px-5 items-center gap-4">
           <div>
             <button
               onClick={handleAddPartNumber}

@@ -1,7 +1,7 @@
-import React from 'react';
-import type { PartNumber } from '../types/PartNumber';
-import { ValidatePartNumberRow } from './ValidatePartNumberRow';
-import { AnimatePresence } from 'framer-motion';
+import React from "react";
+import type { PartNumber } from "../types/PartNumber";
+import { ValidatePartNumberRow } from "./ValidatePartNumberRow";
+import { AnimatePresence } from "framer-motion";
 
 interface ValidatePartNumberListProps {
   partNumbers: PartNumber[];
@@ -15,9 +15,8 @@ const ValidatePartNumberList: React.FC<ValidatePartNumberListProps> = ({
   onDeletePartNumber,
 }) => {
   return (
-    <div className="space-y-2 py-5 px-5">
-      {/* Cabeçalho */}
-      <div className="grid grid-cols-[2fr_0.3fr_0.5fr] gap-4 px-1 text-sm font-semibold text-gray-600">
+    <div className="space-y-4 py-5 px-5">
+      <div className="hidden md:grid md:grid-cols-[2fr_0.3fr_0.5fr] gap-4 px-1 text-sm font-semibold text-gray-600">
         <h3>Part-Number</h3>
         <h3>Status</h3>
         <h3>Ações</h3>
@@ -26,7 +25,7 @@ const ValidatePartNumberList: React.FC<ValidatePartNumberListProps> = ({
       <AnimatePresence>
         {partNumbers.map((pn) => (
           <ValidatePartNumberRow
-            key={pn.id} 
+            key={pn.id}
             partNumber={pn}
             onUpdate={onUpdatePartNumber}
             onDelete={onDeletePartNumber}
