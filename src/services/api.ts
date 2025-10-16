@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, ClassifiedData } from '../types/PartNumber';
+import type { ApiResponse, ClassifiedData, HistoryItem } from '../types/PartNumber';
 
 //rotas api
 const API_URL = 'http://127.0.0.1:8000/'; 
@@ -35,6 +35,7 @@ export const uploadAndProcessPdf = async (file: File): Promise<ApiResponse> => {
   }
 };
 
+// --- API CALL PARA CLASSIFICAR ---
 export const classifyPartNumber = async (partNumberValue: string): Promise<ClassifiedData> => {
   try {
     const response = await axios.post<{ data: ClassifiedData }>(CLASSIFY_API_URL, {
@@ -45,6 +46,87 @@ export const classifyPartNumber = async (partNumberValue: string): Promise<Class
     console.error(`Erro ao classificar o Part Number ${partNumberValue}:`, error);
     throw new Error('Não foi possível obter a classificação da IA.');
   }
+};
+
+// --- API CALL PARA HISTORICO ---
+export const getHistory = async (): Promise<HistoryItem[]> => {
+  //const historyUrl = API_URL + 'historico/'; 
+  
+  try {
+    // QUANDO O BACKEND ESTIVER PRONTO:
+    // const response = await axios.get<HistoryItem[]>(historyUrl);
+    // return response.data;
+    return mockGetHistory();
+  } catch (error) {
+    console.error('Erro ao buscar o histórico:', error);
+    throw new Error('Não foi possível carregar o histórico.');
+  }
+};
+
+// --- API CALL PARA UM ITEM DO HISTÓRICO ---
+export const getHistoryItemById = async (id: number): Promise<HistoryItem> => {
+  // const historyItemUrl = `${API_URL}historico/${id}/`;
+  try {
+    // return (await axios.get<HistoryItem>(historyItemUrl)).data; // Para quando o backend estiver pronto
+    return mockGetHistoryItemById(id);
+  } catch (error) {
+        console.error(`Erro ao buscar o item de histórico ${id}:`, error);
+        throw new Error('Não foi possível carregar os detalhes do item.');
+    }
+};
+// --- API CALL PARA ATUALIZAR UM ITEM DO HISTÓRICO ---
+export const updateHistoryItemClassification = async (id: number, classification: ClassifiedData): Promise<HistoryItem> => {
+    console.log(`Simulando PUT/PATCH para o item de histórico ${id} com os dados:`, classification);
+    return new Promise(resolve => {
+        setTimeout(() => {
+            // Atualizar item no BACKEND aqui quando estiver pronto
+            const updatedItem: HistoryItem = {
+                historyId: id,
+                fileHash: "hash-atualizado",
+                processedDate: new Date().toISOString(),
+                partNumber: `PN-ATUALIZADO-${id}`,
+                status: "classificado",
+                classification: classification
+            };
+            resolve(updatedItem);
+        }, 300); // Resposta rápida
+    });
+};
+
+// --- MOCK API CALL PARA HISTORICO ---
+const mockGetHistory = (): Promise<HistoryItem[]> => {
+  console.log("Simulando chamada para GET /historico");
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const mockHistory: HistoryItem[] = [
+        {
+          historyId: 101,
+          fileHash: "hash123",
+          processedDate: "2025-10-14T14:30:00Z",
+          partNumber: "AXD-4815H62342-Z",
+          status: "classificado",
+          classification: { description: "Microcontrolador ARM Cortex-M4...", ncmCode: "8542.31.90", taxRate: 16.00, manufacturerName: "OmniChip Technologies", countryOfOrigin: "TW", fullAddress: "123 Innovation Drive..." }
+        },
+        {
+          historyId: 102,
+          fileHash: "hash123",
+          processedDate: "2025-10-14T14:30:00Z",
+          partNumber: "ABC-123-XYZ",
+          status: "revisao",
+          classification: null
+        },
+        {
+          historyId: 103,
+          fileHash: "hash456",
+          processedDate: "2025-10-13T09:00:00Z",
+          partNumber: "PN-MOCK-003",
+          status: "classificado",
+          classification: { description: "Capacitor Cerâmico Multicamada", ncmCode: "8532.24.10", taxRate: 12.00, manufacturerName: "Kyocera", countryOfOrigin: "JP", fullAddress: "6 Takeda Tobadono-cho..." }
+        }
+      ];
+      resolve(mockHistory);
+    }, 1000); 
+  });
 };
 
 // --- MOCK API CALL PARA CLASSIFICAÇÃO ---
@@ -64,5 +146,30 @@ export const mockClassifyPartNumber = (partNumberValue: string): Promise<Classif
       console.log("Simulação de classificação concluída. Retornando dados:", mockResponse);
       resolve(mockResponse);
     }, 1500); 
+  });
+};
+
+// --- MOCK API CALL PARA HISTORICO DE UM ITEM ---
+const mockGetHistoryItemById = (id: number): Promise<HistoryItem> => {
+  console.log(`Simulando chamada para GET /historico/${id}`);
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const mockItem: HistoryItem = {
+        historyId: id,
+        fileHash: "hash-de-item-do-banco",
+        processedDate: new Date().toISOString(),
+        partNumber: `PN-DO-BANCO-${id}`,
+        status: "classificado",
+        classification: { 
+            description: "Descrição carregada diretamente do banco de dados...", 
+            ncmCode: "8542.31.90", 
+            taxRate: 16.00, 
+            manufacturerName: "Fabricante do Banco de Dados", 
+            countryOfOrigin: "DB", 
+            fullAddress: "Endereço vindo do Banco de Dados" 
+        }
+      };
+      resolve(mockItem);
+    }, 500);
   });
 };

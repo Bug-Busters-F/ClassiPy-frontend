@@ -27,3 +27,13 @@ export interface ApiPartNumber {
 export interface ApiResponse {
   Parts: ApiPartNumber[];
 }
+
+// Tipo para o historico de processos
+export interface HistoryItem {
+  historyId: number;
+  fileHash: string;
+  processedDate: string;
+  partNumber: string;
+  status: PartNumberStatus;
+  classification: ClassifiedData | null;
+}
