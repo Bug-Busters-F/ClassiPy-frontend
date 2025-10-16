@@ -33,7 +33,7 @@ const ClassificationModal = ({ item, onClose, onSave }: ClassificationModalProps
   
   const handleSaveChanges = () => {
     if (!classificationData) return;
-    const updatedItem = { ...item, status: 'classificado' as PartNumberStatus, classification: classificationData };
+    const updatedItem = { ...item, status: 'validado' as PartNumberStatus, classification: classificationData };
     onSave(updatedItem);
   };
 

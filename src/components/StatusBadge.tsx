@@ -3,13 +3,14 @@ import type { PartNumberStatus } from '../types/PartNumber'
 
 const RevisionIcon = () => <span className='text-yellow-500'><i className="fa-solid fa-circle-exclamation fa-lg"></i></span> 
 const ClassifiedIcon = () => <span className='text-blue-500'><i className="fa-solid fa-gears fa-lg"></i></span> 
+const ProcessingIcon = () => <span className='text-blue-500'><i className="fa-solid fa-spinner"></i></span> 
+const ValidateIcon = () => <span className='text-green-500'><i className="fa-solid fa-check-circle fa-lg"></i></span> 
 
 interface StatusBadgeProps{
     status: PartNumberStatus;
 }
 
 const statusConfig = {
-    // A entrada 'validado' foi removida.
     revisao: {
         text: 'Requer Revisão',
         icon: <RevisionIcon/>,
@@ -19,6 +20,16 @@ const statusConfig = {
         text: 'Classificado',
         icon: <ClassifiedIcon/>,
         className: 'bg-blue-100 text-blue-800'
+    },
+    processando: {
+        text: 'Processando...',
+        icon: <ProcessingIcon/>,
+        className: 'bg-gray-200 text-gray-800'
+    },
+    validado: {
+        text: 'Validado',
+        icon: <ValidateIcon/>,
+        className: 'bg-green-100 text-green-800'
     }
 }
 

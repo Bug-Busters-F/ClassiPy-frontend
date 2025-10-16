@@ -1,11 +1,15 @@
 import { Link } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import type { PartNumber } from "../types/PartNumber";
+import type { HistoryItem, PartNumber } from "../types/PartNumber";
 import ValidatePartNumberList from "../components/ValidatePartNumberList";
 import { usePartNumberContext } from "../context/PartNumberContext";
+import { mockClassifyPartNumber } from "../services/api";
+import { useState } from "react";
+import ClassificationModal from "../components/ClassificationModal";
 
 const ValidatePartNumber = () => {
   const { partNumbers, setPartNumbers } = usePartNumberContext();
+  const [selectedPartNumber, setSelectedPartNumber] = useState<PartNumber | null>(null);
 
   const handleUpdatePartNumber = (id: string, newValue: string) => {
     setPartNumbers((currentPartNumbers) =>
@@ -32,6 +36,34 @@ const ValidatePartNumber = () => {
     setPartNumbers((current) => current.filter((pn) => pn.id !== id));
   };
 
+  const handleclassifyPartNumber = async(id: string) => {
+    const partNumberToClassify = partNumbers.find(pn => pn.id === id);
+    if (!partNumberToClassify || partNumberToClassify.status == 'processando') return;
+    setPartNumbers(prev => prev.map(pn => pn.id === id ? {...pn, status: 'processando'} : pn));
+    try {
+      const classificationResult = await mockClassifyPartNumber(partNumberToClassify.value);
+      setPartNumbers(prev => prev.map(pn => pn.id === id ? {...pn, status: 'classificado', classification: classificationResult} : pn));
+    }catch (error) {
+      console.error("Erro ao classificar o Part-Number:", error);
+      setPartNumbers(prev => prev.map(pn => pn.id === id ? {...pn, status: 'revisao'} : pn));
+    }
+  }
+
+  const handleOpenModal = (partNumber: PartNumber) => {
+    setSelectedPartNumber(partNumber);
+  };
+
+  const handleSaveFromModal = (updatedItem: HistoryItem) => {
+    setPartNumbers(prev => 
+      prev.map(pn => 
+        pn.id === selectedPartNumber?.id 
+        ? { ...pn, status: 'classificado', classification: updatedItem.classification! } 
+        : pn
+      )
+    );
+    setSelectedPartNumber(null);
+  };
+
   return (
     <div className="px-[8%] w-screen pb-10">
       <h2 className="pt-8 text-3xl font-bold text-gray-800">
@@ -55,6 +87,8 @@ const ValidatePartNumber = () => {
             partNumbers={partNumbers}
             onUpdatePartNumber={handleUpdatePartNumber}
             onDeletePartNumber={handleDeletePartNumber}
+            onClassifyPartNumber={handleclassifyPartNumber}
+            onOpenModal={handleOpenModal}
           />
         ) : (
           <div className="text-center py-10 px-5 text-gray-500">
@@ -86,6 +120,20 @@ const ValidatePartNumber = () => {
           </div>
         </div>
       </div>
+      {selectedPartNumber && (
+        <ClassificationModal
+          item={{
+            historyId: 0,
+            fileHash: '',
+            processedDate: new Date().toISOString(),
+            partNumber: selectedPartNumber.value,
+            status: selectedPartNumber.status,
+            classification: selectedPartNumber.classification || null
+          }}
+          onClose={() => setSelectedPartNumber(null)}
+          onSave={handleSaveFromModal}
+        />
+      )}
     </div>
   );
 };
