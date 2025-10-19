@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ApiResponse, ClassifiedData, HistoryItem } from '../types/PartNumber';
+import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse } from '../types/PartNumber';
 
 //rotas api
 const API_URL = 'http://127.0.0.1:8000/'; 
@@ -11,28 +11,27 @@ const CLASSIFY_API_URL = '';
  * @returns Uma Promise que resolve com os dados da API.
  */
 
-export const uploadAndProcessPdf = async (file: File): Promise<ApiResponse> => {
-  const formData = new FormData();
-  formData.append('file', file);
-  const uploadFileUrl = API_URL + 'uploadfile/'; 
+export const uploadAndProcessPdf = async (file: File): Promise<UploadApiResponse> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const uploadFileUrl = `${API_URL}uploadfile/`;
 
-  try {
-    const response = await axios.post<ApiResponse>(uploadFileUrl, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  } catch (error) {
-    
-    if (axios.isAxiosError(error) && error.response) {
-      console.error('Erro na resposta da API:', error.response.data);
-      throw new Error(`Erro do servidor: ${error.response.statusText || 'Não foi possível processar o arquivo.'}`);
-    } else {
-      console.error('Erro ao enviar o PDF:', error);
-      throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão.');
+    try {
+        const response = await axios.post<UploadApiResponse>(uploadFileUrl, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data; 
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response) {
+            console.error('Erro na resposta da API (upload):', error.response.data);
+            throw new Error(`Erro do servidor: ${error.response.data.detail || 'Não foi possível processar o arquivo.'}`);
+        } else {
+            console.error('Erro ao enviar o PDF:', error);
+            throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão.');
+        }
     }
-  }
 };
 
 // --- API CALL PARA CLASSIFICAR ---
@@ -45,6 +44,26 @@ export const classifyPartNumber = async (partNumberValue: string): Promise<Class
   } catch (error) {
     console.error(`Erro ao classificar o Part Number ${partNumberValue}:`, error);
     throw new Error('Não foi possível obter a classificação da IA.');
+  }
+};
+
+// --- API CALL PARA SALVAR PARTNUMBER APOS LEITURA PDF ---
+export const saveInitialPartNumbers = async (items: InitialPartNumberPayload[]): Promise<InitialSaveResponseItem[]> => {
+
+  const saveUrl = `${API_URL}historico/`;
+
+  try {
+    // A API espera uma lista de { partNumber: string, fileHash: string }
+    // E retorna uma lista de { pro_id: number, partNumber: string, fileHash: string }
+    const response = await axios.post<InitialSaveResponseItem[]>(saveUrl, items);
+    console.log(`${items.length} Part Numbers iniciais salvos/encontrados no histórico.`);
+    return response.data; 
+  } catch (error) {
+    console.error('Erro ao salvar Part Numbers iniciais:', error);
+    if (axios.isAxiosError(error) && error.response) {
+      throw new Error(`Erro do servidor ao salvar PNs: ${error.response.data.detail || 'Erro desconhecido'}`);
+    }
+    throw new Error('Não foi possível registrar os Part Numbers extraídos.');
   }
 };
 
@@ -63,7 +82,7 @@ export const getHistory = async (): Promise<HistoryItem[]> => {
   }
 };
 
-// --- API CALL PARA UM ITEM DO HISTÓRICO ---
+// --- API CALL PARA UM ITEM DO HISTÓRICO ---A
 export const getHistoryItemById = async (id: number): Promise<HistoryItem> => {
   // const historyItemUrl = `${API_URL}historico/${id}/`;
   try {

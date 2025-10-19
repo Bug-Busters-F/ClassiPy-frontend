@@ -22,6 +22,7 @@ const ValidatePartNumber = () => {
   const handleAddPartNumber = () => {
     const newPartNumber: PartNumber = {
       id: uuidv4(),
+      productId: null,
       value: "",
       country: "",
       status: "revisao",
@@ -57,7 +58,7 @@ const ValidatePartNumber = () => {
     setPartNumbers(prev => 
       prev.map(pn => 
         pn.id === selectedPartNumber?.id 
-        ? { ...pn, status: 'classificado', classification: updatedItem.classification! } 
+        ? { ...pn, status: 'validado', classification: updatedItem.classification! } 
         : pn
       )
     );

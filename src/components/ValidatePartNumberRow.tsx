@@ -20,6 +20,7 @@ export const ValidatePartNumberRow: React.FC<ValidatePartNumberRowProps> = ({
 }) => {
   const isProcessing = partNumber.status === 'processando';
   const isClassified = partNumber.status === 'classificado';
+  const isValidated = partNumber.status === 'validado';
   return (
     <motion.div
       layout
@@ -41,10 +42,15 @@ export const ValidatePartNumberRow: React.FC<ValidatePartNumberRowProps> = ({
         <StatusBadge status={partNumber.status} />
       </div>
       <div className="flex justify-between w-full mt-2 md:mt-0">
-        {isClassified ? (
+        {isValidated ? (
+          <div className="w-[50%] py-4 md:p-2 flex items-center space-x-2 justify-center rounded-lg text-green-600 bg-green-100">
+            <i className="fa-solid fa-check-circle fa-lg"></i>
+            <p className="hidden md:inline">Validado</p>
+          </div>
+        ) : isClassified ? (
           <button
             onClick={() => onOpenModal(partNumber)}
-            className="w-[48%] py-2 md:p-2 flex items-center space-x-2 justify-center rounded-lg text-green-600 bg-green-50 hover:bg-green-100 transition duration-200 ease-in-out"
+            className="w-[50%] py-2 md:p-2 flex items-center space-x-2 justify-center rounded-lg text-green-600 bg-green-50 hover:bg-green-100 transition duration-200 ease-in-out"
           >
             <i className="fa-solid fa-pen-to-square fa-lg"></i>
             <p className="hidden md:inline">Validar</p>

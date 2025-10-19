@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid"; 
 import DragAndDropUploader from "../components/DragAndDropUploader";
 import Loading from "./Loading";
-import type { PartNumber, ApiResponse } from "../types/PartNumber";
+import type { PartNumber, InitialPartNumberPayload, ApiPartNumber } from "../types/PartNumber";
 import { usePartNumberContext } from "../context/PartNumberContext";
-import { uploadAndProcessPdf } from "../services/api";
+import { saveInitialPartNumbers, uploadAndProcessPdf } from "../services/api";
 
 const Process = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -19,29 +19,6 @@ const Process = () => {
     setError(null);
   };
 
-  // --- MOCK API CALL ---
-  // Esta função simula a chamada ao backend.
-  // const mockApiCall = (file: File): Promise<ApiResponse> => {
-  //   console.log(`Simulando processamento para o arquivo: ${file.name}`);
-    
-  //   return new Promise((resolve) => {
-  //     setTimeout(() => {
-  //       // Dados de exemplo que o backend retornaria
-  //       const mockResponse: ApiResponse = {
-  //         Parts: [
-  //           { PartNumber: "PN-MOCK-001", CountryOfOrigin: "USA" },
-  //           { PartNumber: "PN-MOCK-002", CountryOfOrigin: "Germany" },
-  //           { PartNumber: "PN-MOCK-003", CountryOfOrigin: "Japan" },
-  //           { PartNumber: "ABC-123-XYZ", CountryOfOrigin: "China" },
-  //         ],
-  //       };
-  //       console.log("Simulação concluída. Retornando dados:", mockResponse);
-  //       resolve(mockResponse);
-  //     }, 1500); 
-  //   });
-  // };
-
-
   const handleProcessFile = async () => {
     if (!uploadedFile) {
       alert("Por favor, selecione um arquivo primeiro.");
@@ -51,29 +28,64 @@ const Process = () => {
     setError(null);
 
     try {
-      //usando a função mock em vez da chamada real, substituir quando entender o back
-      // const response = await mockApiCall(uploadedFile);
+      const uploadResponse = await uploadAndProcessPdf(uploadedFile);
+      console.log("Resposta da API (upload):", uploadResponse);
 
-      //chamada real:
-      const response = await uploadAndProcessPdf(uploadedFile);
-      console.log("Resposta da API recebida:", response);
-      
-      const partNumbersFromApi: PartNumber[] = response.Parts.map(p => ({
-        id: uuidv4(),
-        value: p.PartNumber,
-        country: p.CountryOfOrigin,
+      const fileHash = (uploadResponse as any).hash_code;
+      const extractedParts = uploadResponse.Parts || [];
+
+      if (extractedParts.length === 0) {
+          alert("Nenhum Part Number encontrado no PDF.");
+          setIsLoading(false); // Para o loading se não houver PNs
+          return; // Interrompe a execução
+      }
+
+      if (!fileHash) {
+          console.warn("API de upload não retornou hash_code. Não será possível salvar no histórico inicial agora.");
+          const partNumbersForContext: PartNumber[] = extractedParts.map((part: ApiPartNumber) => ({
+              id: uuidv4(),
+              productId: null, 
+              value: part.PartNumber,
+              country: part.CountryOfOrigin || '',
+              status: 'revisao'
+          }));
+          setPartNumbers(partNumbersForContext);
+          navigate("/validate-partnumber");
+          return;
+      }
+
+      const payloadToSave: InitialPartNumberPayload[] = extractedParts.map((part: ApiPartNumber) => ({
+          partNumber: part.PartNumber,
+          fileHash: fileHash
+      }));
+
+      // 3. CHAMA A FUNÇÃO para salvar no banco e OBTÉM OS IDs
+      const savedItemsResponse = await saveInitialPartNumbers(payloadToSave);
+
+      // 4. Cria um mapa para associar PartNumber -> productId (pro_id)
+      const idMap = new Map(savedItemsResponse.map(item => [item.partNumber, item.pro_id]));
+
+      // 5. Formata a lista final para o Context, incluindo o productId
+      const partNumbersWithIds: PartNumber[] = extractedParts.map((part: ApiPartNumber) => ({
+        id: uuidv4(), // ID único do frontend
+        productId: idMap.get(part.PartNumber) ?? null, // ID do backend (pro_id)
+        value: part.PartNumber,
+        country: part.CountryOfOrigin || '',
         status: 'revisao'
       }));
 
-      setPartNumbers(partNumbersFromApi);
+      // 6. Atualiza o Context e navega
+      setPartNumbers(partNumbersWithIds);
       navigate("/validate-partnumber");
 
     } catch (err) {
+      // Tratamento de erro mais específico
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Ocorreu um erro inesperado.");
+        setError("Ocorreu um erro inesperado durante o processamento.");
       }
+      console.error("Erro em handleProcessFile:", err);
     } finally {
       setIsLoading(false);
     }

@@ -10,11 +10,21 @@ export interface ClassifiedData {
 export type PartNumberStatus = 'revisao' | 'classificado' | 'processando' | 'validado';
 
 export interface PartNumber {
-  id: string; 
-  value: string; 
+  id: string;
+  productId: number | null;
+  value: string;
   country: string; 
   status: PartNumberStatus;
-  classification?: ClassifiedData; 
+  classification?: ClassifiedData;
+}
+export interface InitialPartNumberPayload {
+  partNumber: string;
+  fileHash: string;
+}
+export interface InitialSaveResponseItem {
+  pro_id: number; 
+  partNumber: string;
+  fileHash: string; 
 }
 
 // Tipo para cada item retornado pela API
@@ -27,6 +37,8 @@ export interface ApiPartNumber {
 export interface ApiResponse {
   Parts: ApiPartNumber[];
 }
+
+export type UploadApiResponse = ApiResponse & { hash_code: string };
 
 // Tipo para o historico de processos
 export interface HistoryItem {
