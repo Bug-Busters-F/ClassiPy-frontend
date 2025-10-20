@@ -69,13 +69,11 @@ export const saveInitialPartNumbers = async (items: InitialPartNumberPayload[]):
 
 // --- API CALL PARA HISTORICO ---
 export const getHistory = async (): Promise<HistoryItem[]> => {
-  //const historyUrl = API_URL + 'historico/'; 
-  
+  const historyUrl = API_URL + 'historico/'; 
   try {
-    // QUANDO O BACKEND ESTIVER PRONTO:
-    // const response = await axios.get<HistoryItem[]>(historyUrl);
-    // return response.data;
-    return mockGetHistory();
+    const response = await axios.get<HistoryItem[]>(historyUrl);
+    console.log("Histórico carregado com sucesso. Itens encontrados:", response.data);
+    return response.data;
   } catch (error) {
     console.error('Erro ao buscar o histórico:', error);
     throw new Error('Não foi possível carregar o histórico.');
@@ -113,40 +111,40 @@ export const updateHistoryItemClassification = async (id: number, classification
 };
 
 // --- MOCK API CALL PARA HISTORICO ---
-const mockGetHistory = (): Promise<HistoryItem[]> => {
-  console.log("Simulando chamada para GET /historico");
-  return new Promise(resolve => {
-    setTimeout(() => {
-      const mockHistory: HistoryItem[] = [
-        {
-          historyId: 101,
-          fileHash: "hash123",
-          processedDate: "2025-10-14T14:30:00Z",
-          partNumber: "AXD-4815H62342-Z",
-          status: "classificado",
-          classification: { description: "Microcontrolador ARM Cortex-M4...", ncmCode: "8542.31.90", taxRate: 16.00, manufacturerName: "OmniChip Technologies", countryOfOrigin: "TW", fullAddress: "123 Innovation Drive..." }
-        },
-        {
-          historyId: 102,
-          fileHash: "hash123",
-          processedDate: "2025-10-14T14:30:00Z",
-          partNumber: "ABC-123-XYZ",
-          status: "revisao",
-          classification: null
-        },
-        {
-          historyId: 103,
-          fileHash: "hash456",
-          processedDate: "2025-10-13T09:00:00Z",
-          partNumber: "PN-MOCK-003",
-          status: "classificado",
-          classification: { description: "Capacitor Cerâmico Multicamada", ncmCode: "8532.24.10", taxRate: 12.00, manufacturerName: "Kyocera", countryOfOrigin: "JP", fullAddress: "6 Takeda Tobadono-cho..." }
-        }
-      ];
-      resolve(mockHistory);
-    }, 1000); 
-  });
-};
+// const mockGetHistory = (): Promise<HistoryItem[]> => {
+//   console.log("Simulando chamada para GET /historico");
+//   return new Promise(resolve => {
+//     setTimeout(() => {
+//       const mockHistory: HistoryItem[] = [
+//         {
+//           historyId: 101,
+//           fileHash: "hash123",
+//           processedDate: "2025-10-14T14:30:00Z",
+//           partNumber: "AXD-4815H62342-Z",
+//           status: "classificado",
+//           classification: { description: "Microcontrolador ARM Cortex-M4...", ncmCode: "8542.31.90", taxRate: 16.00, manufacturerName: "OmniChip Technologies", countryOfOrigin: "TW", fullAddress: "123 Innovation Drive..." }
+//         },
+//         {
+//           historyId: 102,
+//           fileHash: "hash123",
+//           processedDate: "2025-10-14T14:30:00Z",
+//           partNumber: "ABC-123-XYZ",
+//           status: "revisao",
+//           classification: null
+//         },
+//         {
+//           historyId: 103,
+//           fileHash: "hash456",
+//           processedDate: "2025-10-13T09:00:00Z",
+//           partNumber: "PN-MOCK-003",
+//           status: "classificado",
+//           classification: { description: "Capacitor Cerâmico Multicamada", ncmCode: "8532.24.10", taxRate: 12.00, manufacturerName: "Kyocera", countryOfOrigin: "JP", fullAddress: "6 Takeda Tobadono-cho..." }
+//         }
+//       ];
+//       resolve(mockHistory);
+//     }, 1000); 
+//   });
+// };
 
 // --- MOCK API CALL PARA CLASSIFICAÇÃO ---
 export const mockClassifyPartNumber = (partNumberValue: string): Promise<ClassifiedData> => {
