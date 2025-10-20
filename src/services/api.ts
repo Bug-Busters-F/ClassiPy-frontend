@@ -69,7 +69,7 @@ export const saveInitialPartNumbers = async (items: InitialPartNumberPayload[]):
 
 // --- API CALL PARA HISTORICO ---
 export const getHistory = async (): Promise<HistoryItem[]> => {
-  const historyUrl = API_URL + 'historico/'; 
+  const historyUrl = API_URL + 'produtos/'; 
   try {
     const response = await axios.get<HistoryItem[]>(historyUrl);
     console.log("Histórico carregado com sucesso. Itens encontrados:", response.data);
