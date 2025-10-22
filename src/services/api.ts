@@ -50,7 +50,7 @@ export const classifyPartNumber = async (partNumberValue: string): Promise<Class
 // --- API CALL PARA SALVAR PARTNUMBER APOS LEITURA PDF ---
 export const saveInitialPartNumbers = async (items: InitialPartNumberPayload[]): Promise<InitialSaveResponseItem[]> => {
 
-  const saveUrl = `${API_URL}historico/`;
+  const saveUrl = `${API_URL}produto/`;
 
   try {
     // A API espera uma lista de { partNumber: string, fileHash: string }
@@ -67,9 +67,26 @@ export const saveInitialPartNumbers = async (items: InitialPartNumberPayload[]):
   }
 };
 
+export const deleteProduto = async (id: number) => {
+  const deleteUrl = `${API_URL}produto/${id}`;
+  try {
+    const response = await axios.delete(deleteUrl);
+    console.log(`Produto ${id} deletado com sucesso:`, response.data);
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error('Erro ao deletar produto:', error.response.data);
+      throw new Error(error.response.data.detail || 'Erro ao deletar produto.');
+    } else {
+      console.error('Erro desconhecido ao deletar produto:', error);
+      throw new Error('Erro de conexão com o servidor.');
+    }
+  }
+};
+
 // --- API CALL PARA HISTORICO ---
 export const getHistory = async (): Promise<HistoryItem[]> => {
-  const historyUrl = API_URL + 'produtos/'; 
+  const historyUrl = API_URL + 'historico/'; 
   try {
     const response = await axios.get<HistoryItem[]>(historyUrl);
     console.log("Histórico carregado com sucesso. Itens encontrados:", response.data);

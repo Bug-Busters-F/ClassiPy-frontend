@@ -3,13 +3,14 @@ import { v4 as uuidv4 } from "uuid";
 import type { HistoryItem, PartNumber } from "../types/PartNumber";
 import ValidatePartNumberList from "../components/ValidatePartNumberList";
 import { usePartNumberContext } from "../context/PartNumberContext";
-import { mockClassifyPartNumber } from "../services/api";
+import { deleteProduto, mockClassifyPartNumber } from "../services/api";
 import { useState } from "react";
 import ClassificationModal from "../components/ClassificationModal";
 
 const ValidatePartNumber = () => {
   const { partNumbers, setPartNumbers } = usePartNumberContext();
-  const [selectedPartNumber, setSelectedPartNumber] = useState<PartNumber | null>(null);
+  const [selectedPartNumber, setSelectedPartNumber] =
+    useState<PartNumber | null>(null);
 
   const handleUpdatePartNumber = (id: string, newValue: string) => {
     setPartNumbers((currentPartNumbers) =>
@@ -33,33 +34,66 @@ const ValidatePartNumber = () => {
     ]);
   };
 
-  const handleDeletePartNumber = (id: string) => {
-    setPartNumbers((current) => current.filter((pn) => pn.id !== id));
+  const handleDeletePartNumber = async (id: string) => {
+    const partNumber = partNumbers.find((pn) => pn.id === id);
+    if (!partNumber?.productId) {
+      setPartNumbers((current) => current.filter((pn) => pn.id !== id));
+      return;
+    }
+
+    try {
+      await deleteProduto(partNumber.productId);
+      setPartNumbers((current) => current.filter((pn) => pn.id !== id));
+    } catch (error) {
+      console.error("Erro ao deletar produto:", error);
+      alert("Erro ao deletar o produto. Veja o console para detalhes.");
+    }
   };
 
-  const handleclassifyPartNumber = async(id: string) => {
-    const partNumberToClassify = partNumbers.find(pn => pn.id === id);
-    if (!partNumberToClassify || partNumberToClassify.status == 'processando') return;
-    setPartNumbers(prev => prev.map(pn => pn.id === id ? {...pn, status: 'processando'} : pn));
+  const handleclassifyPartNumber = async (id: string) => {
+    const partNumberToClassify = partNumbers.find((pn) => pn.id === id);
+    if (!partNumberToClassify || partNumberToClassify.status == "processando")
+      return;
+    setPartNumbers((prev) =>
+      prev.map((pn) => (pn.id === id ? { ...pn, status: "processando" } : pn))
+    );
     try {
-      const classificationResult = await mockClassifyPartNumber(partNumberToClassify.value);
-      setPartNumbers(prev => prev.map(pn => pn.id === id ? {...pn, status: 'classificado', classification: classificationResult} : pn));
-    }catch (error) {
+      const classificationResult = await mockClassifyPartNumber(
+        partNumberToClassify.value
+      );
+      setPartNumbers((prev) =>
+        prev.map((pn) =>
+          pn.id === id
+            ? {
+                ...pn,
+                status: "classificado",
+                classification: classificationResult,
+              }
+            : pn
+        )
+      );
+    } catch (error) {
       console.error("Erro ao classificar o Part-Number:", error);
-      setPartNumbers(prev => prev.map(pn => pn.id === id ? {...pn, status: 'revisao'} : pn));
+      setPartNumbers((prev) =>
+        prev.map((pn) => (pn.id === id ? { ...pn, status: "revisao" } : pn))
+      );
     }
-  }
+  };
 
   const handleOpenModal = (partNumber: PartNumber) => {
     setSelectedPartNumber(partNumber);
   };
 
   const handleSaveFromModal = (updatedItem: HistoryItem) => {
-    setPartNumbers(prev => 
-      prev.map(pn => 
-        pn.id === selectedPartNumber?.id 
-        ? { ...pn, status: 'validado', classification: updatedItem.classification! } 
-        : pn
+    setPartNumbers((prev) =>
+      prev.map((pn) =>
+        pn.id === selectedPartNumber?.id
+          ? {
+              ...pn,
+              status: "validado",
+              classification: updatedItem.classification!,
+            }
+          : pn
       )
     );
     setSelectedPartNumber(null);
@@ -125,11 +159,11 @@ const ValidatePartNumber = () => {
         <ClassificationModal
           item={{
             historyId: 0,
-            fileHash: '',
+            fileHash: "",
             processedDate: new Date().toISOString(),
             partNumber: selectedPartNumber.value,
             status: selectedPartNumber.status,
-            classification: selectedPartNumber.classification || null
+            classification: selectedPartNumber.classification || null,
           }}
           onClose={() => setSelectedPartNumber(null)}
           onSave={handleSaveFromModal}
