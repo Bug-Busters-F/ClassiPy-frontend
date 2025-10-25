@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { HistoryItem, PartNumber } from "../types/PartNumber";
 import ValidatePartNumberList from "../components/ValidatePartNumberList";
 import { usePartNumberContext } from "../context/PartNumberContext";
-import { deleteProduto, mockClassifyPartNumber } from "../services/api";
+import { deleteProduto, classifyPartNumber } from "../services/api";
 import { useState } from "react";
 import ClassificationModal from "../components/ClassificationModal";
 
@@ -52,13 +52,12 @@ const ValidatePartNumber = () => {
 
   const handleclassifyPartNumber = async (id: string) => {
     const partNumberToClassify = partNumbers.find((pn) => pn.id === id);
-    if (!partNumberToClassify || partNumberToClassify.status == "processando")
-      return;
+    if (!partNumberToClassify || partNumberToClassify.status == "processando") return;
     setPartNumbers((prev) =>
       prev.map((pn) => (pn.id === id ? { ...pn, status: "processando" } : pn))
     );
     try {
-      const classificationResult = await mockClassifyPartNumber(
+      const classificationResult = await classifyPartNumber(
         partNumberToClassify.value
       );
       setPartNumbers((prev) =>
@@ -74,6 +73,7 @@ const ValidatePartNumber = () => {
       );
     } catch (error) {
       console.error("Erro ao classificar o Part-Number:", error);
+      alert(`Falha ao classificar ${partNumberToClassify.value}:\n${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setPartNumbers((prev) =>
         prev.map((pn) => (pn.id === id ? { ...pn, status: "revisao" } : pn))
       );
@@ -157,9 +157,12 @@ const ValidatePartNumber = () => {
       </div>
       {selectedPartNumber && (
         <ClassificationModal
+          productId={selectedPartNumber.productId}
+          
           item={{
             historyId: 0,
-            fileHash: "",
+            productId: selectedPartNumber.productId, 
+            fileHash: "", 
             processedDate: new Date().toISOString(),
             partNumber: selectedPartNumber.value,
             status: selectedPartNumber.status,

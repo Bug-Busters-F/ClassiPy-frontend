@@ -1,22 +1,23 @@
 import { useState } from 'react';
-import type { ClassifiedData, HistoryItem, PartNumberStatus } from '../types/PartNumber';
-import { mockClassifyPartNumber } from '../services/api';
+import type { ClassifiedData, HistoryItem } from '../types/PartNumber';
+import { classifyPartNumber, updateProductClassification } from '../services/api';
 import Loading from '../pages/Loading';
 
 interface ClassificationModalProps {
   item: HistoryItem;
+  productId: number | null;
   onClose: () => void;
   onSave: (updatedItem: HistoryItem) => void;
 }
 
-const ClassificationModal = ({ item, onClose, onSave }: ClassificationModalProps) => {
+const ClassificationModal = ({ item, productId, onClose, onSave }: ClassificationModalProps) => {
   const [classificationData, setClassificationData] = useState<ClassifiedData | null>(item.classification);
   const [isClassifying, setIsClassifying] = useState(false);
 
   const handleClassify = async () => {
     setIsClassifying(true);
     try {
-      const data = await mockClassifyPartNumber(item.partNumber);
+      const data = await classifyPartNumber(item.partNumber);
       setClassificationData(data);
     } catch (error) {
       console.error("Erro ao classificar:", error);
@@ -31,10 +32,26 @@ const ClassificationModal = ({ item, onClose, onSave }: ClassificationModalProps
     setClassificationData({ ...classificationData, [e.target.name]: e.target.value });
   };
   
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (!classificationData) return;
-    const updatedItem = { ...item, status: 'validado' as PartNumberStatus, classification: classificationData };
-    onSave(updatedItem);
+    if (!productId) {
+      return;
+    }
+    setIsClassifying(true);
+    
+    try {
+      const updatedItemFromApi = await updateProductClassification(
+        productId, 
+        item.partNumber,
+        classificationData
+      );
+      onSave(updatedItemFromApi);
+    } catch (error) {
+      console.error("Erro ao salvar alterações:", error);
+      alert(`Falha ao salvar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    } finally {
+      setIsClassifying(false);
+    }
   };
 
   return (

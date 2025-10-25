@@ -6,7 +6,6 @@ import Process from "../pages/Process";
 import CenteredLayout from "../components/CenteredLayout";
 import ValidatePartNumber from "../pages/ValidatePartNumber";
 import { PartNumberProvider } from "../context/PartNumberContext";
-import ClassifyPartNumber from "../pages/ClassfyPartNumber";
 import History from "../pages/History";
 
 const AppRoutes = () => {
@@ -21,7 +20,6 @@ const AppRoutes = () => {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/validate-partnumber" element={<ValidatePartNumber />}/>
-              <Route path="/classify/:id" element={<ClassifyPartNumber />} />
               <Route path="/history" element={<History />} />
               <Route element={<CenteredLayout />}>
                 <Route path="/process" element={<Process />} />

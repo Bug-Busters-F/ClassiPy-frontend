@@ -36,8 +36,8 @@ const Process = () => {
 
       if (extractedParts.length === 0) {
           alert("Nenhum Part Number encontrado no PDF.");
-          setIsLoading(false); // Para o loading se não houver PNs
-          return; // Interrompe a execução
+          setIsLoading(false); 
+          return; 
       }
 
       if (!fileHash) {
@@ -59,27 +59,20 @@ const Process = () => {
           fileHash: fileHash
       }));
 
-      // 3. CHAMA A FUNÇÃO para salvar no banco e OBTÉM OS IDs
       const savedItemsResponse = await saveInitialPartNumbers(payloadToSave);
-
-      // 4. Cria um mapa para associar PartNumber -> productId (pro_id)
       const idMap = new Map(savedItemsResponse.map(item => [item.partNumber, item.pro_id]));
-
-      // 5. Formata a lista final para o Context, incluindo o productId
       const partNumbersWithIds: PartNumber[] = extractedParts.map((part: ApiPartNumber) => ({
-        id: uuidv4(), // ID único do frontend
-        productId: idMap.get(part.PartNumber) ?? null, // ID do backend (pro_id)
+        id: uuidv4(),
+        productId: idMap.get(part.PartNumber) ?? null,
         value: part.PartNumber,
         country: part.CountryOfOrigin || '',
         status: 'revisao'
       }));
 
-      // 6. Atualiza o Context e navega
       setPartNumbers(partNumbersWithIds);
       navigate("/validate-partnumber");
 
     } catch (err) {
-      // Tratamento de erro mais específico
       if (err instanceof Error) {
         setError(err.message);
       } else {

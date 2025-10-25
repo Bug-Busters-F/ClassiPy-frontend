@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { HistoryItem } from "../types/PartNumber";
-import { getHistory, updateHistoryItemClassification } from "../services/api";
+import { getHistory } from "../services/api";
 import Loading from "./Loading";
 import ClassificationModal from "../components/ClassificationModal";
 import HistoryList from "../components/HistoryList";
@@ -20,14 +20,10 @@ const History = () => {
   }, []);
   console.log("History Items:", historyItems);
 
-  const handleUpdateItem = (updatedItem: HistoryItem) => {
-    updateHistoryItemClassification(
-      updatedItem.historyId,
-      updatedItem.classification!
-    );
+  const handleUpdateItem = (updatedItemFromApi: HistoryItem) => {
     setHistoryItems((prev) =>
       prev.map((item) =>
-        item.historyId === updatedItem.historyId ? updatedItem : item
+        item.historyId === updatedItemFromApi.historyId ? updatedItemFromApi : item
       )
     );
     setSelectedHistoryItem(null);
@@ -96,6 +92,7 @@ const History = () => {
 
       {selectedHistoryItem && (
         <ClassificationModal
+          productId={selectedHistoryItem.productId}
           item={selectedHistoryItem}
           onClose={() => setSelectedHistoryItem(null)}
           onSave={handleUpdateItem}

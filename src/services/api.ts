@@ -1,9 +1,8 @@
 import axios from 'axios';
-import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse } from '../types/PartNumber';
+import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload } from '../types/PartNumber';
 
 //rotas api
-const API_URL = 'http://127.0.0.1:8000/'; 
-const CLASSIFY_API_URL = '';
+const API_URL = 'http://127.0.0.1:8000/';
 
 /**
  * Envia um arquivo PDF para o backend para extrair os Part Numbers.
@@ -36,14 +35,35 @@ export const uploadAndProcessPdf = async (file: File): Promise<UploadApiResponse
 
 // --- API CALL PARA CLASSIFICAR ---
 export const classifyPartNumber = async (partNumberValue: string): Promise<ClassifiedData> => {
+  const encodedPartNumber = encodeURIComponent(partNumberValue);
+  const classifyUrl = `${API_URL}classify/${encodedPartNumber}`;
+  console.log(`Buscando classificação real para: ${partNumberValue}`);
+
   try {
-    const response = await axios.post<{ data: ClassifiedData }>(CLASSIFY_API_URL, {
-      PartNumber: partNumberValue, 
+    const response = await axios.get<BackendClassificationResponse>(classifyUrl, {
+      headers: { 'Accept': 'application/json' }
     });
-    return response.data.data; 
+    const backendData = response.data;
+
+    const mappedData: ClassifiedData = {
+      description: backendData.descricao,
+      ncmCode: backendData.ncm,              
+      taxRate: backendData.aliquota,     
+      manufacturerName: backendData.fabricante, 
+      countryOfOrigin: "N/A (API)", 
+      fullAddress: "N/A (API)",
+    };
+    console.log("Classificação real recebida e mapeada:", mappedData);
+    return mappedData;
   } catch (error) {
     console.error(`Erro ao classificar o Part Number ${partNumberValue}:`, error);
-    throw new Error('Não foi possível obter a classificação da IA.');
+    
+    if (axios.isAxiosError(error) && error.response) {
+      const errorDetail = error.response.data?.detail || 'Erro desconhecido da API';
+      throw new Error(`Não foi possível obter a classificação: ${errorDetail}`);
+    } else {
+      throw new Error('Não foi possível conectar ao servidor de classificação.');
+    }
   }
 };
 
@@ -53,8 +73,6 @@ export const saveInitialPartNumbers = async (items: InitialPartNumberPayload[]):
   const saveUrl = `${API_URL}produto/`;
 
   try {
-    // A API espera uma lista de { partNumber: string, fileHash: string }
-    // E retorna uma lista de { pro_id: number, partNumber: string, fileHash: string }
     const response = await axios.post<InitialSaveResponseItem[]>(saveUrl, items);
     console.log(`${items.length} Part Numbers iniciais salvos/encontrados no histórico.`);
     return response.data; 
@@ -86,82 +104,117 @@ export const deleteProduto = async (id: number) => {
 
 // --- API CALL PARA HISTORICO ---
 export const getHistory = async (): Promise<HistoryItem[]> => {
-  const historyUrl = API_URL + 'historico/'; 
+  const historyUrl = `${API_URL}historico/`;
   try {
-    const response = await axios.get<HistoryItem[]>(historyUrl);
-    console.log("Histórico carregado com sucesso. Itens encontrados:", response.data);
-    return response.data;
+    const response = await axios.get<BackendHistoryResponse[]>(historyUrl);
+  
+    const mappedItems: HistoryItem[] = response.data.map(backendItem => {
+      let mappedClassification: ClassifiedData | null = null;
+      if (backendItem.classification) {
+        mappedClassification = {
+          description: backendItem.classification.description,
+          ncmCode: backendItem.classification.ncmCode,
+          taxRate: backendItem.classification.taxRate,
+          manufacturerName: backendItem.classification.manufacturer.name,
+          countryOfOrigin: backendItem.classification.manufacturer.country,
+          fullAddress: backendItem.classification.manufacturer.address,
+        };
+      }
+
+      return {
+        productId: backendItem.pro_id ?? null,
+        historyId: backendItem.historyId,
+        fileHash: backendItem.fileHash,
+        processedDate: backendItem.processedDate,
+        partNumber: backendItem.partNumber,
+        status: backendItem.status,
+        classification: mappedClassification
+      };
+    });
+    return mappedItems;
   } catch (error) {
     console.error('Erro ao buscar o histórico:', error);
     throw new Error('Não foi possível carregar o histórico.');
   }
 };
 
-// --- API CALL PARA UM ITEM DO HISTÓRICO ---A
-export const getHistoryItemById = async (id: number): Promise<HistoryItem> => {
-  // const historyItemUrl = `${API_URL}historico/${id}/`;
-  try {
-    // return (await axios.get<HistoryItem>(historyItemUrl)).data; // Para quando o backend estiver pronto
-    return mockGetHistoryItemById(id);
-  } catch (error) {
-        console.error(`Erro ao buscar o item de histórico ${id}:`, error);
-        throw new Error('Não foi possível carregar os detalhes do item.');
+// --- API CALL PARA SALVAR/ATUALIZAR CLASSIFICAÇÃO ---
+export const updateProductClassification = async (
+  productId: number, 
+  partNumber: string,
+  classificationData: ClassifiedData
+): Promise<HistoryItem> => {
+  
+  const updateUrl = `${API_URL}produto/${productId}`;
+  
+  const payload: BackendUpdatePayload = {
+    partNumber: partNumber,  
+    description: classificationData.description, 
+    status: 'validado',
+
+    classification: {
+      description: classificationData.description,
+      ncmCode: classificationData.ncmCode,
+      taxRate: classificationData.taxRate,
+    },
+    manufacturer: {
+      name: classificationData.manufacturerName,
+      country: classificationData.countryOfOrigin,
+      address: classificationData.fullAddress,
     }
-};
-// --- API CALL PARA ATUALIZAR UM ITEM DO HISTÓRICO ---
-export const updateHistoryItemClassification = async (id: number, classification: ClassifiedData): Promise<HistoryItem> => {
-    console.log(`Simulando PUT/PATCH para o item de histórico ${id} com os dados:`, classification);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            // Atualizar item no BACKEND aqui quando estiver pronto
-            const updatedItem: HistoryItem = {
-                historyId: id,
-                fileHash: "hash-atualizado",
-                processedDate: new Date().toISOString(),
-                partNumber: `PN-ATUALIZADO-${id}`,
-                status: "classificado",
-                classification: classification
-            };
-            resolve(updatedItem);
-        }, 300); // Resposta rápida
-    });
+  };
+
+  console.log(`Salvando classificação para Produto ID: ${productId} com payload:`, payload);
+
+  try {
+    const response = await axios.put<BackendHistoryResponse>(updateUrl, payload);
+    
+    const backendItem = response.data;
+    let mappedClassification: ClassifiedData | null = null;
+    if (backendItem.classification) {
+      mappedClassification = {
+        description: backendItem.classification.description,
+        ncmCode: backendItem.classification.ncmCode,
+        taxRate: backendItem.classification.taxRate,
+        manufacturerName: backendItem.classification.manufacturer.name,
+        countryOfOrigin: backendItem.classification.manufacturer.country,
+        fullAddress: backendItem.classification.manufacturer.address,
+      };
+    }
+
+    const mappedHistoryItem: HistoryItem = {
+      productId: productId, 
+      historyId: backendItem.historyId,
+      fileHash: backendItem.fileHash,
+      processedDate: backendItem.processedDate,
+      partNumber: backendItem.partNumber, 
+      status: backendItem.status,
+      classification: mappedClassification
+    };
+    
+    return mappedHistoryItem;
+
+  } catch (error) {
+    console.error(`Erro ao salvar a classification para o produto ${productId}:`, error);
+
+    if (axios.isAxiosError(error) && error.response) {
+      let detailMsg = 'Erro desconhecido';
+      if (error.response.data && error.response.data.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          detailMsg = error.response.data.detail
+            .map((err: any) => `Campo: ${err.loc.join(' > ')}, Erro: ${err.msg}`)
+            .join('; ');
+        } else {
+          detailMsg = String(error.response.data.detail);
+        }
+      }
+      throw new Error(`Erro do servidor ao salvar: ${detailMsg}`);
+    } else {
+      throw new Error('Não foi possível conectar ao servidor para salvar a classification.');
+    }
+  }
 };
 
-// --- MOCK API CALL PARA HISTORICO ---
-// const mockGetHistory = (): Promise<HistoryItem[]> => {
-//   console.log("Simulando chamada para GET /historico");
-//   return new Promise(resolve => {
-//     setTimeout(() => {
-//       const mockHistory: HistoryItem[] = [
-//         {
-//           historyId: 101,
-//           fileHash: "hash123",
-//           processedDate: "2025-10-14T14:30:00Z",
-//           partNumber: "AXD-4815H62342-Z",
-//           status: "classificado",
-//           classification: { description: "Microcontrolador ARM Cortex-M4...", ncmCode: "8542.31.90", taxRate: 16.00, manufacturerName: "OmniChip Technologies", countryOfOrigin: "TW", fullAddress: "123 Innovation Drive..." }
-//         },
-//         {
-//           historyId: 102,
-//           fileHash: "hash123",
-//           processedDate: "2025-10-14T14:30:00Z",
-//           partNumber: "ABC-123-XYZ",
-//           status: "revisao",
-//           classification: null
-//         },
-//         {
-//           historyId: 103,
-//           fileHash: "hash456",
-//           processedDate: "2025-10-13T09:00:00Z",
-//           partNumber: "PN-MOCK-003",
-//           status: "classificado",
-//           classification: { description: "Capacitor Cerâmico Multicamada", ncmCode: "8532.24.10", taxRate: 12.00, manufacturerName: "Kyocera", countryOfOrigin: "JP", fullAddress: "6 Takeda Tobadono-cho..." }
-//         }
-//       ];
-//       resolve(mockHistory);
-//     }, 1000); 
-//   });
-// };
 
 // --- MOCK API CALL PARA CLASSIFICAÇÃO ---
 export const mockClassifyPartNumber = (partNumberValue: string): Promise<ClassifiedData> => {
@@ -180,30 +233,5 @@ export const mockClassifyPartNumber = (partNumberValue: string): Promise<Classif
       console.log("Simulação de classificação concluída. Retornando dados:", mockResponse);
       resolve(mockResponse);
     }, 1500); 
-  });
-};
-
-// --- MOCK API CALL PARA HISTORICO DE UM ITEM ---
-const mockGetHistoryItemById = (id: number): Promise<HistoryItem> => {
-  console.log(`Simulando chamada para GET /historico/${id}`);
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const mockItem: HistoryItem = {
-        historyId: id,
-        fileHash: "hash-de-item-do-banco",
-        processedDate: new Date().toISOString(),
-        partNumber: `PN-DO-BANCO-${id}`,
-        status: "classificado",
-        classification: { 
-            description: "Descrição carregada diretamente do banco de dados...", 
-            ncmCode: "8542.31.90", 
-            taxRate: 16.00, 
-            manufacturerName: "Fabricante do Banco de Dados", 
-            countryOfOrigin: "DB", 
-            fullAddress: "Endereço vindo do Banco de Dados" 
-        }
-      };
-      resolve(mockItem);
-    }, 500);
   });
 };

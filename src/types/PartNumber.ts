@@ -42,10 +42,58 @@ export type UploadApiResponse = ApiResponse & { hash_code: string };
 
 // Tipo para o historico de processos
 export interface HistoryItem {
+  productId: number | null;
   historyId: number;
   fileHash: string;
   processedDate: string;
   partNumber: string;
   status: PartNumberStatus;
   classification: ClassifiedData | null;
+}
+
+export interface BackendClassificationResponse {
+  ncm: string;
+  descricao: string;
+  fabricante: string;
+  aliquota: number;
+  descricao_ncm: string;
+}
+
+export interface BackendHistoryResponse {
+  pro_id?: number;
+  historyId: number;
+  fileHash: string;
+  processedDate: string;
+  partNumber: string;
+  status: PartNumberStatus;
+  classification: {
+    description: string;
+    ncmCode: string;
+    taxRate: number;
+    manufacturer: { 
+      name: string;
+      country: string;
+      address: string;
+    }
+  } | null;
+}
+
+export interface BackendUpdatePayload {
+  partNumber: string;         
+  description: string;     
+  status: PartNumberStatus; 
+  classification: ClassificationPayload; 
+  manufacturer: ManufacturerPayload;  
+}
+
+export interface ClassificationPayload {
+  description: string; 
+  ncmCode: string;
+  taxRate: number;
+}
+
+export interface ManufacturerPayload {
+  name: string;
+  country: string;
+  address: string;
 }
