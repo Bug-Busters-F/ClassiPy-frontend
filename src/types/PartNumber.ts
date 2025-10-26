@@ -25,6 +25,7 @@ export interface InitialSaveResponseItem {
   pro_id: number; 
   partNumber: string;
   fileHash: string; 
+  status: PartNumberStatus;
 }
 
 // Tipo para cada item retornado pela API

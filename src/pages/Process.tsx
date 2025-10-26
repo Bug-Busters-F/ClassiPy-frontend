@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid"; 
+import { v4 as uuidv4 } from "uuid";
 import DragAndDropUploader from "../components/DragAndDropUploader";
 import Loading from "./Loading";
-import type { PartNumber, InitialPartNumberPayload, ApiPartNumber } from "../types/PartNumber";
+import type { PartNumber, InitialPartNumberPayload, ApiPartNumber, PartNumberStatus, InitialSaveResponseItem } from "../types/PartNumber";
 import { usePartNumberContext } from "../context/PartNumberContext";
 import { saveInitialPartNumbers, uploadAndProcessPdf } from "../services/api";
 
@@ -11,7 +11,7 @@ const Process = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const {setPartNumbers} = usePartNumberContext();
+  const { setPartNumbers } = usePartNumberContext();
   const navigate = useNavigate();
 
   const handleFileSelected = (file: File) => {
@@ -32,44 +32,47 @@ const Process = () => {
       console.log("Resposta da API (upload):", uploadResponse);
 
       const fileHash = (uploadResponse as any).hash_code;
-      const extractedParts = uploadResponse.Parts || [];
+      const extractedParts: ApiPartNumber[] = uploadResponse.Parts || [];
 
       if (extractedParts.length === 0) {
-          alert("Nenhum Part Number encontrado no PDF.");
-          setIsLoading(false); 
-          return; 
+        alert("Nenhum Part Number encontrado no PDF.");
+        setIsLoading(false);
+        return;
       }
 
       if (!fileHash) {
-          console.warn("API de upload não retornou hash_code. Não será possível salvar no histórico inicial agora.");
-          const partNumbersForContext: PartNumber[] = extractedParts.map((part: ApiPartNumber) => ({
-              id: uuidv4(),
-              productId: null, 
-              value: part.PartNumber,
-              country: part.CountryOfOrigin || '',
-              status: 'revisao'
-          }));
-          setPartNumbers(partNumbersForContext);
-          navigate("/validate-partnumber");
-          return;
+        console.warn("API de upload não retornou hash_code. Não será possível salvar no histórico inicial agora.");
+        const partNumbersForContext: PartNumber[] = extractedParts.map((part) => ({
+          id: uuidv4(),
+          productId: null,
+          value: part.PartNumber,
+          country: part.CountryOfOrigin || 'N/A',
+          status: 'revisao'
+        }));
+        setPartNumbers(partNumbersForContext);
+        navigate("/validate-partnumber");
+        return;
       }
 
-      const payloadToSave: InitialPartNumberPayload[] = extractedParts.map((part: ApiPartNumber) => ({
-          partNumber: part.PartNumber,
-          fileHash: fileHash
+      const payloadToSave: InitialPartNumberPayload[] = extractedParts.map((part) => ({
+        partNumber: part.PartNumber,
+        fileHash: fileHash
       }));
 
-      const savedItemsResponse = await saveInitialPartNumbers(payloadToSave);
-      const idMap = new Map(savedItemsResponse.map(item => [item.partNumber, item.pro_id]));
-      const partNumbersWithIds: PartNumber[] = extractedParts.map((part: ApiPartNumber) => ({
-        id: uuidv4(),
-        productId: idMap.get(part.PartNumber) ?? null,
-        value: part.PartNumber,
-        country: part.CountryOfOrigin || '',
-        status: 'revisao'
-      }));
+      const savedItemsResponse: InitialSaveResponseItem[] = await saveInitialPartNumbers(payloadToSave);
+      const productInfoMap = new Map(savedItemsResponse.map(item => [item.partNumber, { pro_id: item.pro_id, status: item.status }]));
+      const partNumbersWithStatus: PartNumber[] = extractedParts.map((part) => {
+        const productInfo = productInfoMap.get(part.PartNumber);
+        return {
+          id: uuidv4(),
+          productId: productInfo?.pro_id ?? null,
+          value: part.PartNumber,
+          country: part.CountryOfOrigin || 'N/A',
+          status: productInfo?.status ?? 'revisao'
+        };
+      });
 
-      setPartNumbers(partNumbersWithIds);
+      setPartNumbers(partNumbersWithStatus);
       navigate("/validate-partnumber");
 
     } catch (err) {

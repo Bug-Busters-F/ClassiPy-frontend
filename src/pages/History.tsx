@@ -4,6 +4,7 @@ import { getHistory } from "../services/api";
 import Loading from "./Loading";
 import ClassificationModal from "../components/ClassificationModal";
 import HistoryList from "../components/HistoryList";
+import { generateHistoryExcel } from "../utils/ExcelExporter";
 
 const History = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
@@ -53,11 +54,22 @@ const History = () => {
 
   const handleGenerateExcel = () => {
     if (selectedItems.size === 0) {
-      alert("Selecione pelo menos um item classificado para gerar o Excel.");
+      alert("Selecione pelo menos um item classificado ou validado para gerar o Excel.");
       return;
     }
-    console.log("Gerando Excel para IDs:", Array.from(selectedItems));
-    alert(`Gerando Excel para ${selectedItems.size} item(s)!`);
+
+    // Filtra o array `historyItems` para pegar apenas os objetos selecionados
+    const selectedHistoryObjects = historyItems.filter(item =>
+      selectedItems.has(item.historyId)
+      && item.classification
+    );
+
+    if (selectedHistoryObjects.length === 0) {
+      alert("Nenhum dos itens selecionados possui dados de classificação completos. Não é possível exportar.");
+      return;
+    }
+
+    generateHistoryExcel(selectedHistoryObjects);
   };
 
   if (isLoading)

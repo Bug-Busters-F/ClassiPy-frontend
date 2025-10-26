@@ -1,16 +1,68 @@
 import { Link } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
-import type { HistoryItem, PartNumber } from "../types/PartNumber";
+import type { HistoryItem, PartNumber, ClassifiedData } from "../types/PartNumber";
 import ValidatePartNumberList from "../components/ValidatePartNumberList";
 import { usePartNumberContext } from "../context/PartNumberContext";
-import { deleteProduto, classifyPartNumber } from "../services/api";
-import { useState } from "react";
+import { deleteProduto, classifyPartNumber, getClassificationForProduct } from "../services/api";
+import { useState, useEffect } from "react";
 import ClassificationModal from "../components/ClassificationModal";
+import { generateExcel } from "../utils/ExcelExporter";
 
 const ValidatePartNumber = () => {
   const { partNumbers, setPartNumbers } = usePartNumberContext();
+  const [isFetchingData, setIsFetchingData] = useState(false);
   const [selectedPartNumber, setSelectedPartNumber] =
     useState<PartNumber | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchMissingClassifications = async () => {
+      const itemsToFetch = partNumbers.filter(
+        (pn) => pn.status === 'validado' && pn.productId && !pn.classification
+      );
+
+      if (itemsToFetch.length > 0) {
+        if (isMounted) setIsFetchingData(true);
+        console.log("Buscando dados de PNs pré-validados...", itemsToFetch);
+
+        try {
+          await Promise.all(
+            itemsToFetch.map(async (item) => {
+              if (item.productId) {
+                const classificationData: ClassifiedData = await getClassificationForProduct(item.productId);
+
+                if (isMounted) {
+                  setPartNumbers(prevPartNumbers =>
+                    prevPartNumbers.map(pn => {
+                      if (pn.id === item.id) {
+                        return {
+                          ...item,
+                          classification: classificationData
+                        };
+                      }
+                      return pn;
+                    })
+                  )
+                }
+              }
+            })
+          );
+          if (isMounted) console.log("Dados de PNs pré-validados carregados.");
+        } catch (error) {
+          if (isMounted) console.error("Erro ao buscar classificações em falta:", error);
+        } finally {
+          if (isMounted) setIsFetchingData(false);
+        }
+      }
+    };
+
+    fetchMissingClassifications();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [partNumbers, setPartNumbers]);
 
   const handleUpdatePartNumber = (id: string, newValue: string) => {
     setPartNumbers((currentPartNumbers) =>
@@ -64,10 +116,10 @@ const ValidatePartNumber = () => {
         prev.map((pn) =>
           pn.id === id
             ? {
-                ...pn,
-                status: "classificado",
-                classification: classificationResult,
-              }
+              ...pn,
+              status: "classificado",
+              classification: classificationResult,
+            }
             : pn
         )
       );
@@ -89,14 +141,22 @@ const ValidatePartNumber = () => {
       prev.map((pn) =>
         pn.id === selectedPartNumber?.id
           ? {
-              ...pn,
-              status: "validado",
-              classification: updatedItem.classification!,
-            }
+            ...pn,
+            status: "validado",
+            classification: updatedItem.classification!,
+          }
           : pn
       )
     );
     setSelectedPartNumber(null);
+  };
+
+  const handleGenerateExcel = () => {
+    if (isFetchingData) {
+      return;
+    }
+
+    generateExcel(partNumbers)
   };
 
   return (
@@ -149,7 +209,11 @@ const ValidatePartNumber = () => {
                 Cancelar
               </button>
             </Link>
-            <button className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md cursor-pointer hover:bg-green-500 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out">
+            <button
+              onClick={handleGenerateExcel}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md cursor-pointer hover:bg-green-500 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out"
+              disabled={partNumbers.filter(pn => pn.status === 'validado').length === 0}
+            >
               <i className="fa-solid fa-file-excel"></i>Gerar Documento
             </button>
           </div>
@@ -158,11 +222,11 @@ const ValidatePartNumber = () => {
       {selectedPartNumber && (
         <ClassificationModal
           productId={selectedPartNumber.productId}
-          
+
           item={{
             historyId: 0,
-            productId: selectedPartNumber.productId, 
-            fileHash: "", 
+            productId: selectedPartNumber.productId,
+            fileHash: "",
             processedDate: new Date().toISOString(),
             partNumber: selectedPartNumber.value,
             status: selectedPartNumber.status,

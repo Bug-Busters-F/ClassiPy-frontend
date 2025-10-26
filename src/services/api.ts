@@ -1,8 +1,12 @@
 import axios from 'axios';
-import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload } from '../types/PartNumber';
+import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload, ClassificationPayload } from '../types/PartNumber';
 
 //rotas api
 const API_URL = 'http://127.0.0.1:8000/';
+
+const api = axios.create({
+  baseURL: API_URL,
+});
 
 /**
  * Envia um arquivo PDF para o backend para extrair os Part Numbers.
@@ -234,4 +238,14 @@ export const mockClassifyPartNumber = (partNumberValue: string): Promise<Classif
       resolve(mockResponse);
     }, 1500); 
   });
+};
+
+export const getClassificationForProduct = async (productId: number): Promise<ClassifiedData> => {
+  try {
+    const response = await api.get(`/produto/${productId}/classification`);
+    return response.data;
+  } catch (error) {
+    console.error(`Erro ao buscar classificação para o produto ${productId}:`, error);
+    throw new Error(`Falha ao buscar dados de classificação para o produto ${productId}.`);
+  }
 };
