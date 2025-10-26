@@ -1,3 +1,5 @@
+import GradientText from "./GradientText";
+
 const ClassipyAdvantage = () => {
   const features = [
     {
@@ -27,7 +29,7 @@ const ClassipyAdvantage = () => {
     <div className="py-20">
       <div className="text-center mb-16">
         <h2 className="text-4xl font-bold text-gray-900 mb-4">
-          Vantagens do ClassiPy
+          Vantagens do <GradientText>ClassiPy</GradientText>
         </h2>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto">
           Tecnologia avançada para automatizar seu processo de classificação de
