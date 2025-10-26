@@ -1,46 +1,23 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { v4 as uuidv4 } from "uuid"; 
+import { v4 as uuidv4 } from "uuid";
 import DragAndDropUploader from "../components/DragAndDropUploader";
 import Loading from "./Loading";
-import type { PartNumber, ApiResponse } from "../types/PartNumber";
+import type { PartNumber, InitialPartNumberPayload, ApiPartNumber, PartNumberStatus, InitialSaveResponseItem } from "../types/PartNumber";
 import { usePartNumberContext } from "../context/PartNumberContext";
-import { uploadAndProcessPdf } from "../services/api";
+import { saveInitialPartNumbers, uploadAndProcessPdf } from "../services/api";
 
 const Process = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const {setPartNumbers} = usePartNumberContext();
+  const { setPartNumbers } = usePartNumberContext();
   const navigate = useNavigate();
 
   const handleFileSelected = (file: File) => {
     setUploadedFile(file);
     setError(null);
   };
-
-  // --- MOCK API CALL ---
-  // Esta função simula a chamada ao backend.
-  // const mockApiCall = (file: File): Promise<ApiResponse> => {
-  //   console.log(`Simulando processamento para o arquivo: ${file.name}`);
-    
-  //   return new Promise((resolve) => {
-  //     setTimeout(() => {
-  //       // Dados de exemplo que o backend retornaria
-  //       const mockResponse: ApiResponse = {
-  //         Parts: [
-  //           { PartNumber: "PN-MOCK-001", CountryOfOrigin: "USA" },
-  //           { PartNumber: "PN-MOCK-002", CountryOfOrigin: "Germany" },
-  //           { PartNumber: "PN-MOCK-003", CountryOfOrigin: "Japan" },
-  //           { PartNumber: "ABC-123-XYZ", CountryOfOrigin: "China" },
-  //         ],
-  //       };
-  //       console.log("Simulação concluída. Retornando dados:", mockResponse);
-  //       resolve(mockResponse);
-  //     }, 1500); 
-  //   });
-  // };
-
 
   const handleProcessFile = async () => {
     if (!uploadedFile) {
@@ -51,29 +28,60 @@ const Process = () => {
     setError(null);
 
     try {
-      //usando a função mock em vez da chamada real, substituir quando entender o back
-      // const response = await mockApiCall(uploadedFile);
+      const uploadResponse = await uploadAndProcessPdf(uploadedFile);
+      console.log("Resposta da API (upload):", uploadResponse);
 
-      //chamada real:
-      const response = await uploadAndProcessPdf(uploadedFile);
-      console.log("Resposta da API recebida:", response);
-      
-      const partNumbersFromApi: PartNumber[] = response.Parts.map(p => ({
-        id: uuidv4(),
-        value: p.PartNumber,
-        country: p.CountryOfOrigin,
-        status: 'revisao'
+      const fileHash = (uploadResponse as any).hash_code;
+      const extractedParts: ApiPartNumber[] = uploadResponse.Parts || [];
+
+      if (extractedParts.length === 0) {
+        alert("Nenhum Part Number encontrado no PDF.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!fileHash) {
+        console.warn("API de upload não retornou hash_code. Não será possível salvar no histórico inicial agora.");
+        const partNumbersForContext: PartNumber[] = extractedParts.map((part) => ({
+          id: uuidv4(),
+          productId: null,
+          value: part.PartNumber,
+          country: part.CountryOfOrigin || 'N/A',
+          status: 'revisao'
+        }));
+        setPartNumbers(partNumbersForContext);
+        navigate("/validate-partnumber");
+        return;
+      }
+
+      const payloadToSave: InitialPartNumberPayload[] = extractedParts.map((part) => ({
+        partNumber: part.PartNumber,
+        fileHash: fileHash
       }));
 
-      setPartNumbers(partNumbersFromApi);
+      const savedItemsResponse: InitialSaveResponseItem[] = await saveInitialPartNumbers(payloadToSave);
+      const productInfoMap = new Map(savedItemsResponse.map(item => [item.partNumber, { pro_id: item.pro_id, status: item.status }]));
+      const partNumbersWithStatus: PartNumber[] = extractedParts.map((part) => {
+        const productInfo = productInfoMap.get(part.PartNumber);
+        return {
+          id: uuidv4(),
+          productId: productInfo?.pro_id ?? null,
+          value: part.PartNumber,
+          country: part.CountryOfOrigin || 'N/A',
+          status: productInfo?.status ?? 'revisao'
+        };
+      });
+
+      setPartNumbers(partNumbersWithStatus);
       navigate("/validate-partnumber");
 
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Ocorreu um erro inesperado.");
+        setError("Ocorreu um erro inesperado durante o processamento.");
       }
+      console.error("Erro em handleProcessFile:", err);
     } finally {
       setIsLoading(false);
     }
