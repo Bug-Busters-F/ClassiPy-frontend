@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { HistoryItem } from "../types/PartNumber";
-import { getHistory } from "../services/api";
+import { getHistory, deleteHistory } from "../services/api";
 import Loading from "./Loading";
 import ClassificationModal from "../components/ClassificationModal";
 import HistoryList from "../components/HistoryList";
@@ -72,6 +72,28 @@ const History = () => {
     generateHistoryExcel(selectedHistoryObjects);
   };
 
+  const handleDeleteItem = async (historyId: number) => {
+    if (!window.confirm("Tem certeza que deseja excluir?")) {
+      return;
+    }
+
+    try {
+      await deleteHistory(historyId);
+    
+      setHistoryItems((prev) => prev.filter(item => item.historyId !== historyId));
+
+      setSelectedItems((prev) => {
+        const newSelection = new Set(prev);
+        newSelection.delete(historyId);
+        return newSelection;
+      });
+
+    } catch (error) {
+      console.error("Erro ao excluir item:", error);
+      alert("Não foi possível excluir o item.");
+    }
+  };
+
   if (isLoading)
     return (
       <div className="flex w-full items-center justify-center">
@@ -100,6 +122,7 @@ const History = () => {
         onSelectItem={handleSelectItem}
         onSelectAll={handleSelectAll}
         onOpenModal={setSelectedHistoryItem}
+        onDelete={handleDeleteItem}
       />
 
       {selectedHistoryItem && (

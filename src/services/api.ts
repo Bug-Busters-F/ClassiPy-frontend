@@ -142,6 +142,15 @@ export const getHistory = async (): Promise<HistoryItem[]> => {
   }
 };
 
+export const deleteHistory = async (historyId: number): Promise<void> => {
+  try {
+    await api.delete(`/historico/${historyId}`);
+  } catch (error) {
+    console.error(`Erro ao deletar entrada do histórico ${historyId}: `, error);
+    throw new Error("Falha ao excluir entrada do histório.");
+  }
+};
+
 // --- API CALL PARA SALVAR/ATUALIZAR CLASSIFICAÇÃO ---
 export const updateProductClassification = async (
   productId: number, 
