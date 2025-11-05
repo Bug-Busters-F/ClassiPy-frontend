@@ -8,6 +8,7 @@ interface HistoryRowProps {
   selected: boolean;
   onSelect: () => void;
   onOpenModal: () => void;
+  onDelete: (historyId: number) => void;
 }
 
 const HistoryRow: React.FC<HistoryRowProps> = ({
@@ -15,6 +16,7 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
   selected,
   onSelect,
   onOpenModal,
+  onDelete
 }) => {
   return (
     <motion.div
@@ -49,6 +51,13 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
           className="text-blue-600 hover:underline"
         >
           Ver Detalhes
+        </button>
+        <button
+          onClick={() => onDelete(item.historyId)}
+          title="Excluir esta entrada"
+          className="text-red-500 hover:text-red-700 p-1 ml-4 transition-colors"
+        >
+          <i className="fa-solid fa-trash"></i>
         </button>
       </div>
     </motion.div>

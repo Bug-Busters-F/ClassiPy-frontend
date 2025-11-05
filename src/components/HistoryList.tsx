@@ -9,6 +9,7 @@ interface HistoryListProps {
   onSelectItem: (id: number) => void;
   onSelectAll: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onOpenModal: (item: HistoryItem) => void;
+  onDelete: (historyId: number) => void;
 }
 
 const HistoryList: React.FC<HistoryListProps> = ({
@@ -17,6 +18,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
   onSelectItem,
   onSelectAll,
   onOpenModal,
+  onDelete
 }) => {
   return (
     <div className="space-y-4 py-5 px-5">
@@ -41,6 +43,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
             selected={selectedItems.has(item.historyId)}
             onSelect={() => onSelectItem(item.historyId)}
             onOpenModal={() => onOpenModal(item)}
+            onDelete={(onDelete)}
           />
         ))}
       </AnimatePresence>
