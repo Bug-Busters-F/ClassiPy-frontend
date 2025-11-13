@@ -52,6 +52,12 @@ export interface HistoryItem {
   classification: ClassifiedData | null;
 }
 
+export interface BulkClassificationResult {
+  part_number: string;
+  classification?: BackendClassificationResponse;
+  error?: string;
+}
+
 export interface BackendClassificationResponse {
   ncm: string;
   descricao: string;

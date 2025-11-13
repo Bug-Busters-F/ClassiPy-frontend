@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { HistoryItem, PartNumber, ClassifiedData } from "../types/PartNumber";
 import ValidatePartNumberList from "../components/ValidatePartNumberList";
 import { usePartNumberContext } from "../context/PartNumberContext";
-import { deleteProduto, classifyPartNumber, getClassificationForProduct } from "../services/api";
+import { deleteProduto, classifyPartNumber, getClassificationForProduct, classifyPartNumbers } from "../services/api";
 import { useState, useEffect } from "react";
 import ClassificationModal from "../components/ClassificationModal";
 import { generateExcel } from "../utils/ExcelExporter";
@@ -132,6 +132,79 @@ const ValidatePartNumber = () => {
     }
   };
 
+  const handleClassifyAll = async () => {
+    const partNumbersToClassify = partNumbers.filter(
+      (pn) => pn.status === "revisao"
+    );
+
+    if (partNumbersToClassify.length === 0) {
+      alert("Não há part numbers para classificar.");
+      return;
+    }
+
+    setPartNumbers((prev) =>
+      prev.map((pn) =>
+        partNumbersToClassify.find((p) => p.id === pn.id)
+          ? { ...pn, status: "processando" }
+          : pn
+      )
+    );
+
+    const partNumberValues = partNumbersToClassify.map((pn) => pn.value);
+
+    try {
+      const results = await classifyPartNumbers(partNumberValues);
+      
+      setPartNumbers((prev) => {
+        const newPartNumbers = [...prev];
+
+        results.forEach(result => {
+          const correspondingPartNumber = partNumbersToClassify.find(p => p.value === result.part_number);
+          if(!correspondingPartNumber) return;
+
+          const index = newPartNumbers.findIndex(p => p.id === correspondingPartNumber.id);
+
+          if (index !== -1) {
+            if (result.classification) {
+              const mappedData: ClassifiedData = {
+                description: result.classification.descricao,
+                ncmCode: result.classification.ncm,              
+                taxRate: result.classification.aliquota,     
+                manufacturerName: result.classification.fabricante, 
+                countryOfOrigin: "N/A (API)", 
+                fullAddress: "N/A (API)",
+              };
+              newPartNumbers[index] = {
+                ...newPartNumbers[index],
+                status: "classificado",
+                classification: mappedData,
+              };
+            } else {
+              newPartNumbers[index] = {
+                ...newPartNumbers[index],
+                status: "revisao",
+              };
+              console.error(`Falha ao classificar ${result.part_number}: ${result.error}`);
+            }
+          }
+        });
+        return newPartNumbers;
+      });
+      alert("Processamento em lote concluído. Verifique os resultados.");
+
+    } catch (error) {
+      console.error("Erro ao classificar em lote:", error);
+      alert(`Falha ao classificar em lote:\n${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      setPartNumbers((prev) =>
+        prev.map((pn) =>
+          partNumbersToClassify.find((p) => p.id === pn.id)
+            ? { ...pn, status: "revisao" }
+            : pn
+        )
+      );
+    }
+  };
+
   const handleOpenModal = (partNumber: PartNumber) => {
     setSelectedPartNumber(partNumber);
   };
@@ -209,6 +282,13 @@ const ValidatePartNumber = () => {
                 Cancelar
               </button>
             </Link>
+            <button
+              onClick={handleClassifyAll}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md cursor-pointer hover:bg-blue-500 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out"
+              disabled={partNumbers.filter(pn => pn.status === 'revisao').length === 0}
+            >
+              <i className="fa-solid fa-gears"></i> Processar Todos
+            </button>
             <button
               onClick={handleGenerateExcel}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md cursor-pointer hover:bg-green-500 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out"

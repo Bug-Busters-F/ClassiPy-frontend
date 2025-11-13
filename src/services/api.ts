@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload, ClassificationPayload } from '../types/PartNumber';
+import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload, BulkClassificationResult } from '../types/PartNumber';
 
 //rotas api
 const API_URL = 'http://127.0.0.1:8000/';
@@ -65,6 +65,27 @@ export const classifyPartNumber = async (partNumberValue: string): Promise<Class
     if (axios.isAxiosError(error) && error.response) {
       const errorDetail = error.response.data?.detail || 'Erro desconhecido da API';
       throw new Error(`Não foi possível obter a classificação: ${errorDetail}`);
+    } else {
+      throw new Error('Não foi possível conectar ao servidor de classificação.');
+    }
+  }
+};
+
+export const classifyPartNumbers = async (partNumbers: string[]): Promise<BulkClassificationResult[]> => {
+  const bulkClassifyUrl = `${API_URL}classify/bulk`;
+  console.log(`Buscando classificação em lote para: ${partNumbers.join(', ')}`);
+
+  try {
+    const response = await axios.post<BulkClassificationResult[]>(bulkClassifyUrl, {
+      part_numbers: partNumbers,
+    });
+    console.log("Classificação em lote recebida:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(`Erro ao classificar Part Numbers em lote:`, error);
+    if (axios.isAxiosError(error) && error.response) {
+      const errorDetail = error.response.data?.detail || 'Erro desconhecido da API';
+      throw new Error(`Não foi possível obter a classificação em lote: ${errorDetail}`);
     } else {
       throw new Error('Não foi possível conectar ao servidor de classificação.');
     }
