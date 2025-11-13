@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { HistoryItem } from "../types/PartNumber";
 import { getHistory, deleteHistory } from "../services/api";
 import Loading from "./Loading";
@@ -12,6 +12,8 @@ const History = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<HistoryItem | null>(null);
+  const [ searchTerm, setSearchTerm ] = useState("");
+  const [ filterDate, setFilterDate ] = useState("");
 
   useEffect(() => {
     getHistory()
@@ -51,6 +53,31 @@ const History = () => {
       setSelectedItems(new Set());
     }
   };
+
+  const filteredItems = useMemo(() => {
+    let items = historyItems;
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      items = items.filter((item) => {
+        const desc = item.classification?.description?.toLowerCase() || "";
+        const ncm = item.classification?.ncmCode?.toLowerCase() || "";
+        const partNumber = item.partNumber.toLowerCase();
+
+        return (
+          partNumber.includes(searchLower) ||
+          desc.includes(searchLower) ||
+          ncm.includes(searchLower)
+        );
+      });
+    }
+    if (filterDate) {
+      items = items.filter((item) => {
+        const itemDate = new Date(item.processedDate).toISOString().split("T")[0];
+        return itemDate === filterDate;
+      });
+    }
+    return items;
+  }, [historyItems, searchTerm, filterDate]);
 
   const handleGenerateExcel = () => {
     if (selectedItems.size === 0) {
@@ -116,8 +143,24 @@ const History = () => {
         partir deles.
       </p>
 
+      <div className="flex flex-col md:flex-row gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <input
+          type="text"
+          placeholder="Buscar por Part Number, NCM ou Descrição..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full md:w-2/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="date"
+          value={filterDate}
+          onChange={(e) => setFilterDate(e.target.value)}
+          className="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
       <HistoryList
-        historyItems={historyItems}
+        historyItems={filteredItems}
         selectedItems={selectedItems}
         onSelectItem={handleSelectItem}
         onSelectAll={handleSelectAll}
