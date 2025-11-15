@@ -21,13 +21,15 @@ const Home = () => {
           </div>
         </NavLink>
       </div>
-      
-      <RecentPartnumber />
 
       <FadeInOnScroll>
         <ClassipyAdvantage />
       </FadeInOnScroll>
 
+      <FadeInOnScroll>
+        <RecentPartnumber />
+      </FadeInOnScroll>
+      
       <FadeInOnScroll>
         <HowItWorks />
       </FadeInOnScroll>
