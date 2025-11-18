@@ -15,26 +15,26 @@ const api = axios.create({
  */
 
 export const uploadAndProcessPdf = async (file: File): Promise<UploadApiResponse> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const uploadFileUrl = `${API_URL}uploadfile/`;
+  const formData = new FormData();
+  formData.append('file', file);
+  const uploadFileUrl = `${API_URL}uploadfile/`;
 
-    try {
-        const response = await axios.post<UploadApiResponse>(uploadFileUrl, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data; 
-    } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            console.error('Erro na resposta da API (upload):', error.response.data);
-            throw new Error(`Erro do servidor: ${error.response.data.detail || 'Não foi possível processar o arquivo.'}`);
-        } else {
-            console.error('Erro ao enviar o PDF:', error);
-            throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão.');
-        }
+  try {
+    const response = await axios.post<UploadApiResponse>(uploadFileUrl, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error('Erro na resposta da API (upload):', error.response.data);
+      throw new Error(`Erro do servidor: ${error.response.data.detail || 'Não foi possível processar o arquivo.'}`);
+    } else {
+      console.error('Erro ao enviar o PDF:', error);
+      throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão.');
     }
+  }
 };
 
 // --- API CALL PARA CLASSIFICAR ---
@@ -51,17 +51,17 @@ export const classifyPartNumber = async (partNumberValue: string): Promise<Class
 
     const mappedData: ClassifiedData = {
       description: backendData.descricao,
-      ncmCode: backendData.ncm,              
-      taxRate: backendData.aliquota,     
-      manufacturerName: backendData.fabricante, 
-      countryOfOrigin: "N/A (API)", 
+      ncmCode: backendData.ncm,
+      taxRate: backendData.aliquota,
+      manufacturerName: backendData.fabricante,
+      countryOfOrigin: "N/A (API)",
       fullAddress: "N/A (API)",
     };
     console.log("Classificação real recebida e mapeada:", mappedData);
     return mappedData;
   } catch (error) {
     console.error(`Erro ao classificar o Part Number ${partNumberValue}:`, error);
-    
+
     if (axios.isAxiosError(error) && error.response) {
       const errorDetail = error.response.data?.detail || 'Erro desconhecido da API';
       throw new Error(`Não foi possível obter a classificação: ${errorDetail}`);
@@ -79,7 +79,7 @@ export const saveInitialPartNumbers = async (items: InitialPartNumberPayload[]):
   try {
     const response = await axios.post<InitialSaveResponseItem[]>(saveUrl, items);
     console.log(`${items.length} Part Numbers iniciais salvos/encontrados no histórico.`);
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error('Erro ao salvar Part Numbers iniciais:', error);
     if (axios.isAxiosError(error) && error.response) {
@@ -107,11 +107,20 @@ export const deleteProduto = async (id: number) => {
 };
 
 // --- API CALL PARA HISTORICO ---
-export const getHistory = async (): Promise<HistoryItem[]> => {
+export const getHistory = async (
+  search?: string,
+  start_date?: string,
+  end_date?: string
+): Promise<HistoryItem[]> => {
   const historyUrl = `${API_URL}historico/`;
+
+  const params: any = {};
+  if (search) params.search = search;
+  if (start_date) params.filter_date = start_date;
+
   try {
-    const response = await axios.get<BackendHistoryResponse[]>(historyUrl);
-  
+    const response = await axios.get<BackendHistoryResponse[]>(historyUrl, { params });
+
     const mappedItems: HistoryItem[] = response.data.map(backendItem => {
       let mappedClassification: ClassifiedData | null = null;
       if (backendItem.classification) {
@@ -153,16 +162,16 @@ export const deleteHistory = async (historyId: number): Promise<void> => {
 
 // --- API CALL PARA SALVAR/ATUALIZAR CLASSIFICAÇÃO ---
 export const updateProductClassification = async (
-  productId: number, 
+  productId: number,
   partNumber: string,
   classificationData: ClassifiedData
 ): Promise<HistoryItem> => {
-  
+
   const updateUrl = `${API_URL}produto/${productId}`;
-  
+
   const payload: BackendUpdatePayload = {
-    partNumber: partNumber,  
-    description: classificationData.description, 
+    partNumber: partNumber,
+    description: classificationData.description,
     status: 'validado',
 
     classification: {
@@ -181,7 +190,7 @@ export const updateProductClassification = async (
 
   try {
     const response = await axios.put<BackendHistoryResponse>(updateUrl, payload);
-    
+
     const backendItem = response.data;
     let mappedClassification: ClassifiedData | null = null;
     if (backendItem.classification) {
@@ -196,15 +205,15 @@ export const updateProductClassification = async (
     }
 
     const mappedHistoryItem: HistoryItem = {
-      productId: productId, 
+      productId: productId,
       historyId: backendItem.historyId,
       fileHash: backendItem.fileHash,
       processedDate: backendItem.processedDate,
-      partNumber: backendItem.partNumber, 
+      partNumber: backendItem.partNumber,
       status: backendItem.status,
       classification: mappedClassification
     };
-    
+
     return mappedHistoryItem;
 
   } catch (error) {
@@ -232,7 +241,7 @@ export const updateProductClassification = async (
 // --- MOCK API CALL PARA CLASSIFICAÇÃO ---
 export const mockClassifyPartNumber = (partNumberValue: string): Promise<ClassifiedData> => {
   console.log(`Simulando classificação para o Part Number: ${partNumberValue}`);
-  
+
   return new Promise((resolve) => {
     setTimeout(() => {
       const mockResponse: ClassifiedData = {
@@ -245,7 +254,7 @@ export const mockClassifyPartNumber = (partNumberValue: string): Promise<Classif
       };
       console.log("Simulação de classificação concluída. Retornando dados:", mockResponse);
       resolve(mockResponse);
-    }, 1500); 
+    }, 1500);
   });
 };
 

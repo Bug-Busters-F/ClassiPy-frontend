@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import type { HistoryItem } from "../types/PartNumber";
 import { getHistory, deleteHistory } from "../services/api";
 import Loading from "./Loading";
@@ -12,15 +12,24 @@ const History = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<HistoryItem | null>(null);
-  const [ searchTerm, setSearchTerm ] = useState("");
-  const [ filterDate, setFilterDate ] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterDate, setFilterDate] = useState("");
 
   useEffect(() => {
-    getHistory()
-      .then((data) => setHistoryItems(data))
-      .catch((err) => setError(err.message))
-      .finally(() => setIsLoading(false));
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      setIsLoading(true);
+
+      getHistory(searchTerm, filterDate, filterDate)
+        .then((data) => {
+          setHistoryItems(data);
+          setError(null);
+        })
+        .catch((err) => setError(err.message))
+        .finally(() => setIsLoading(false));
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, filterDate]);
   console.log("History Items:", historyItems);
 
   const handleUpdateItem = (updatedItemFromApi: HistoryItem) => {
@@ -54,31 +63,6 @@ const History = () => {
     }
   };
 
-  const filteredItems = useMemo(() => {
-    let items = historyItems;
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      items = items.filter((item) => {
-        const desc = item.classification?.description?.toLowerCase() || "";
-        const ncm = item.classification?.ncmCode?.toLowerCase() || "";
-        const partNumber = item.partNumber.toLowerCase();
-
-        return (
-          partNumber.includes(searchLower) ||
-          desc.includes(searchLower) ||
-          ncm.includes(searchLower)
-        );
-      });
-    }
-    if (filterDate) {
-      items = items.filter((item) => {
-        const itemDate = new Date(item.processedDate).toISOString().split("T")[0];
-        return itemDate === filterDate;
-      });
-    }
-    return items;
-  }, [historyItems, searchTerm, filterDate]);
-
   const handleGenerateExcel = () => {
     if (selectedItems.size === 0) {
       alert("Selecione pelo menos um item classificado ou validado para gerar o Excel.");
@@ -106,7 +90,7 @@ const History = () => {
 
     try {
       await deleteHistory(historyId);
-    
+
       setHistoryItems((prev) => prev.filter(item => item.historyId !== historyId));
 
       setSelectedItems((prev) => {
@@ -121,12 +105,17 @@ const History = () => {
     }
   };
 
-  if (isLoading)
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setFilterDate("");
+  };
+
+  if (isLoading && historyItems.length === 0)
     return (
       <div className="flex w-full items-center justify-center">
         <Loading
           loadingTitle="Carregando Histórico..."
-          loadingMessage="Buscando todos os processos já realizados."
+          loadingMessage="Buscando processos..."
         />
       </div>
     );
@@ -157,10 +146,17 @@ const History = () => {
           onChange={(e) => setFilterDate(e.target.value)}
           className="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        <button
+          onClick={handleClearFilters}
+          className="px-4 py-2 text-red-500 hover:text-red-700 hover:bg-red-50 font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap"
+          title="Limpar todos os filtros"
+        >
+          <i className="fa-solid fa-filter-circle-xmark"></i>
+        </button>
       </div>
 
       <HistoryList
-        historyItems={filteredItems}
+        historyItems={historyItems}
         selectedItems={selectedItems}
         onSelectItem={handleSelectItem}
         onSelectAll={handleSelectAll}
