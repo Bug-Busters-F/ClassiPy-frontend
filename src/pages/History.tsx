@@ -12,13 +12,24 @@ const History = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<HistoryItem | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterDate, setFilterDate] = useState("");
 
   useEffect(() => {
-    getHistory()
-      .then((data) => setHistoryItems(data))
-      .catch((err) => setError(err.message))
-      .finally(() => setIsLoading(false));
-  }, []);
+    const delayDebounceFn = setTimeout(() => {
+      setIsLoading(true);
+
+      getHistory(searchTerm, filterDate, filterDate)
+        .then((data) => {
+          setHistoryItems(data);
+          setError(null);
+        })
+        .catch((err) => setError(err.message))
+        .finally(() => setIsLoading(false));
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, filterDate]);
   console.log("History Items:", historyItems);
 
   const handleUpdateItem = (updatedItemFromApi: HistoryItem) => {
@@ -79,7 +90,7 @@ const History = () => {
 
     try {
       await deleteHistory(historyId);
-    
+
       setHistoryItems((prev) => prev.filter(item => item.historyId !== historyId));
 
       setSelectedItems((prev) => {
@@ -94,12 +105,17 @@ const History = () => {
     }
   };
 
-  if (isLoading)
+  const handleClearFilters = () => {
+    setSearchTerm("");
+    setFilterDate("");
+  };
+
+  if (isLoading && historyItems.length === 0)
     return (
       <div className="flex w-full items-center justify-center">
         <Loading
           loadingTitle="Carregando Histórico..."
-          loadingMessage="Buscando todos os processos já realizados."
+          loadingMessage="Buscando processos..."
         />
       </div>
     );
@@ -115,6 +131,29 @@ const History = () => {
         Veja todos os processos realizados, seus status e gere documentos a
         partir deles.
       </p>
+
+      <div className="flex flex-col md:flex-row gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+        <input
+          type="text"
+          placeholder="Buscar por Part Number, NCM ou Descrição..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full md:w-2/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="date"
+          value={filterDate}
+          onChange={(e) => setFilterDate(e.target.value)}
+          className="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          onClick={handleClearFilters}
+          className="px-4 py-2 text-red-500 hover:text-red-700 hover:bg-red-50 font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap"
+          title="Limpar todos os filtros"
+        >
+          <i className="fa-solid fa-filter-circle-xmark"></i>
+        </button>
+      </div>
 
       <HistoryList
         historyItems={historyItems}
