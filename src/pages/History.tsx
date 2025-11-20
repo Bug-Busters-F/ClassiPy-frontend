@@ -19,7 +19,7 @@ const History = () => {
     const delayDebounceFn = setTimeout(() => {
       setIsLoading(true);
 
-      getHistory(searchTerm, filterDate, filterDate)
+      getHistory(searchTerm, filterDate)
         .then((data) => {
           setHistoryItems(data);
           setError(null);
@@ -69,7 +69,6 @@ const History = () => {
       return;
     }
 
-    // Filtra o array `historyItems` para pegar apenas os objetos selecionados
     const selectedHistoryObjects = historyItems.filter(item =>
       selectedItems.has(item.historyId)
       && item.classification
@@ -148,7 +147,7 @@ const History = () => {
         />
         <button
           onClick={handleClearFilters}
-          className="px-4 py-2 text-red-500 hover:text-red-700 hover:bg-red-50 font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap"
+          className="px-4 py-2 text-red-500 hover:text-red-700 hover:bg-red-50 font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer"
           title="Limpar todos os filtros"
         >
           <i className="fa-solid fa-filter-circle-xmark"></i>

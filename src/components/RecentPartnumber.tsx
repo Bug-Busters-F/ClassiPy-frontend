@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { getHistory } from '../services/api';
+import { getRecentPartNumbers  } from '../services/api';
 import type { HistoryItem } from '../types/PartNumber';
 import StatusBadge from './StatusBadge';
 
@@ -10,9 +10,9 @@ const RecentPartnumber = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getHistory()
+    getRecentPartNumbers()
       .then((data) => {
-        setRecentItems(data.slice(0, 5));
+        setRecentItems(data);
       })
       .catch(() => {
         setError('Não foi possível carregar os itens recentes.');
@@ -33,7 +33,7 @@ const RecentPartnumber = () => {
 
     if (recentItems.length === 0) {
       return (
-        <div className="text-center py-10 px-5 text-gray-500 bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="text-center px-5 text-gray-500 bg-white rounded-lg shadow-sm border border-gray-200">
             <span className="text-gray-400">
                 <i className="fa-solid fa-file-lines fa-3x"></i>
             </span>

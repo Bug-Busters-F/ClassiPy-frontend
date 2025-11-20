@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload, ClassificationPayload } from '../types/PartNumber';
+import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload } from '../types/PartNumber';
 
 //rotas api
 const API_URL = 'http://127.0.0.1:8000/';
@@ -110,7 +110,6 @@ export const deleteProduto = async (id: number) => {
 export const getHistory = async (
   search?: string,
   start_date?: string,
-  end_date?: string
 ): Promise<HistoryItem[]> => {
   const historyUrl = `${API_URL}historico/`;
 
@@ -148,6 +147,44 @@ export const getHistory = async (
   } catch (error) {
     console.error('Erro ao buscar o histórico:', error);
     throw new Error('Não foi possível carregar o histórico.');
+  }
+};
+
+export const getRecentPartNumbers = async () => {
+  try {
+    const response = await api.get('/produto/recent');
+    const mapped = response.data.map((backendItem: any) => {
+      let mappedClassification = null;
+
+      if (backendItem.classification) {
+        mappedClassification = {
+          description: backendItem.classification.description,
+          ncmCode: backendItem.classification.ncmCode,
+          taxRate: backendItem.classification.taxRate,
+          manufacturerName: backendItem.classification.manufacturer?.name || null,
+          countryOfOrigin: backendItem.classification.manufacturer?.country || null,
+          fullAddress: backendItem.classification.manufacturer?.address || null,
+        };
+      }
+
+      const item: HistoryItem = {
+        productId: backendItem.pro_id,
+        historyId: backendItem.historyId,
+        fileHash: backendItem.fileHash,
+        processedDate: backendItem.processedDate,
+        partNumber: backendItem.partNumber,
+        status: backendItem.status,
+        classification: mappedClassification,
+      };
+
+      return item;
+    });
+
+    return mapped;
+
+  } catch (error) {
+    console.error("Erro ao buscar itens recentes:", error);
+    throw new Error("Não foi possível buscar os Part Numbers recentes.");
   }
 };
 
