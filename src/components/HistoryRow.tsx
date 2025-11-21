@@ -48,14 +48,14 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
       <div>
         <button
           onClick={onOpenModal}
-          className="text-blue-600 hover:underline"
+          className="text-blue-600 hover:underline cursor-pointer"
         >
           Ver Detalhes
         </button>
         <button
           onClick={() => onDelete(item.historyId)}
           title="Excluir esta entrada"
-          className="text-red-500 hover:text-red-700 p-1 ml-4 transition-colors"
+          className="text-red-500 hover:text-red-700 p-1 ml-4 transition-colors cursor-pointer"
         >
           <i className="fa-solid fa-trash"></i>
         </button>

@@ -124,14 +124,14 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
                 </div>
 
                 <div className="flex justify-end gap-4 mt-6">
-                    <button onClick={onClose} className="px-4 py-2 text-gray-700 font-semibold hover:bg-gray-100 rounded-md">Cancelar</button>
-                    <button onClick={handleSaveChanges} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">Salvar Alterações</button>
+                    <button onClick={onClose} className="px-4 py-2 text-gray-700 font-semibold hover:bg-red-200 rounded-md cursor-pointer">Cancelar</button>
+                    <button onClick={handleSaveChanges} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 cursor-pointer">Salvar Alterações</button>
                 </div>
             </>
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-600 mb-4">Este item ainda não foi classificado.</p>
-              <button onClick={handleClassify} className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">
+              <button onClick={handleClassify} className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 cursor-pointer">
                 <i className="fa-solid fa-robot mr-2"></i>
                 Classificar com IA
               </button>
