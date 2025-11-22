@@ -22,7 +22,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
 }) => {
   return (
     <div className="space-y-4 py-5 px-5">
-      {/* Cabeçalho responsivo */}
+
       <div className="hidden md:grid md:grid-cols-[0.3fr_1.2fr_1fr_0.6fr_0.6fr_0.6fr_0.6fr] gap-4 px-1 text-sm font-semibold text-gray-600">
         <h3>
           <input type="checkbox" onChange={onSelectAll} />

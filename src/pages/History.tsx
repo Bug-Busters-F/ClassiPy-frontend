@@ -5,35 +5,31 @@ import Loading from "./Loading";
 import ClassificationModal from "../components/ClassificationModal";
 import HistoryList from "../components/HistoryList";
 import { generateHistoryExcel } from "../utils/ExcelExporter";
-import toast from "react-hot-toast";
-import ConfirmDialog from "../components/ConfirmDialog";
 
 const History = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [pages, setPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<HistoryItem | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterDate, setFilterDate] = useState("");
-  const [confirmData, setConfirmData] = useState<null | { historyId: number }>(null);
+
+  const loadData = () => {
+    setIsLoading(true);
+    getHistory(page, limit)
+      .then((data) => {
+        setHistoryItems(data.items);
+        setPages(data.pages);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setIsLoading(false));
+  };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      setIsLoading(true);
-
-      getHistory(searchTerm, filterDate)
-        .then((data) => {
-          setHistoryItems(data);
-          setError(null);
-        })
-        .catch((err) => setError(err.message))
-        .finally(() => setIsLoading(false));
-    }, 500);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, filterDate]);
-  console.log("History Items:", historyItems);
+    loadData();
+  }, [page]);
 
   const handleUpdateItem = (updatedItemFromApi: HistoryItem) => {
     setHistoryItems((prev) =>
@@ -55,9 +51,7 @@ const History = () => {
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       const allSelectableIds = historyItems
-        .filter(
-          (item) => item.status === "classificado" || item.status === "validado"
-        )
+        .filter((item) => item.status === "classificado" || item.status === "validado")
         .map((item) => item.historyId);
 
       setSelectedItems(new Set(allSelectableIds));
@@ -68,64 +62,42 @@ const History = () => {
 
   const handleGenerateExcel = () => {
     if (selectedItems.size === 0) {
-      toast.error("Selecione pelo menos um item para exportar.");
+      alert("Selecione pelo menos um item classificado ou validado para gerar o Excel.");
       return;
     }
 
-    const selectedHistoryObjects = historyItems.filter(item =>
-      selectedItems.has(item.historyId)
-      && item.classification
+    const selectedHistoryObjects = historyItems.filter(
+      item => selectedItems.has(item.historyId) && item.classification
     );
 
     if (selectedHistoryObjects.length === 0) {
-      toast.error("Nenhum dos itens selecionados possui dados completos para exportar.");
+      alert("Nenhum dos itens selecionados possui dados de classificação completos.");
       return;
     }
 
     generateHistoryExcel(selectedHistoryObjects);
-    toast.success("Arquivo Excel gerado com sucesso!");
   };
 
-  const handleDeleteItem = (historyId: number) => {
-    setConfirmData({ historyId });
-  };
-
-  const confirmDelete = async () => {
-    if (!confirmData) return;
-
-    const { historyId } = confirmData;
+  const handleDeleteItem = async (historyId: number) => {
+    if (!window.confirm("Tem certeza que deseja excluir?")) return;
 
     try {
       await deleteHistory(historyId);
-
       setHistoryItems((prev) => prev.filter(item => item.historyId !== historyId));
-
       setSelectedItems((prev) => {
-        const newSelection = new Set(prev);
-        newSelection.delete(historyId);
-        return newSelection;
+        const newSel = new Set(prev);
+        newSel.delete(historyId);
+        return newSel;
       });
-
-      toast.success("Item excluído com sucesso!");
-    } catch (error) {
-      console.error("Erro ao excluir item:", error);
-      toast.error("Não foi possível excluir o item.");
+    } catch {
+      alert("Não foi possível excluir o item.");
     }
-    setConfirmData(null);
   };
 
-  const handleClearFilters = () => {
-    setSearchTerm("");
-    setFilterDate("");
-  };
-
-  if (isLoading && historyItems.length === 0)
+  if (isLoading)
     return (
       <div className="flex w-full items-center justify-center">
-        <Loading
-          loadingTitle="Carregando Histórico..."
-          loadingMessage="Buscando processos..."
-        />
+        <Loading loadingTitle="Carregando Histórico..." loadingMessage="Buscando processos." />
       </div>
     );
 
@@ -133,66 +105,63 @@ const History = () => {
 
   return (
     <div className="px-4 sm:px-[8%] w-screen pb-20">
-      <h2 className="pt-8 text-3xl font-bold text-gray-800">
-        Histórico de Processos
-      </h2>
+      <h2 className="pt-8 text-3xl font-bold text-gray-800">Histórico de Processos</h2>
       <p className="text-gray-500 font-medium my-4">
-        Veja todos os processos realizados, seus status e gere documentos a
-        partir deles.
+        Veja todos os processos realizados e seus status.
       </p>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-        <input
-          type="text"
-          placeholder="Buscar por Part Number, NCM ou Descrição..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full md:w-2/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <input
-          type="date"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-          className="w-full md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          onClick={handleClearFilters}
-          className="px-4 py-2 text-red-500 hover:text-red-700 hover:bg-red-50 font-medium rounded-lg transition-colors duration-200 flex items-center gap-2 whitespace-nowrap cursor-pointer"
-          title="Limpar todos os filtros"
-        >
-          <i className="fa-solid fa-filter-circle-xmark"></i>
-        </button>
-      </div>
-
-      <HistoryList
-        historyItems={historyItems}
-        selectedItems={selectedItems}
-        onSelectItem={handleSelectItem}
-        onSelectAll={handleSelectAll}
-        onOpenModal={setSelectedHistoryItem}
-        onDelete={handleDeleteItem}
-      />
-
-      {selectedHistoryItem && (
-        <ClassificationModal
-          productId={selectedHistoryItem.productId}
-          item={selectedHistoryItem}
-          onClose={() => setSelectedHistoryItem(null)}
-          onSave={handleUpdateItem}
+      {historyItems.length === 0 ? (
+        <div className="text-center text-gray-600 py-10 text-lg font-medium">
+          Ainda não há dados no histórico.
+        </div>
+      ) : (
+        <HistoryList
+          historyItems={historyItems}
+          selectedItems={selectedItems}
+          onSelectItem={handleSelectItem}
+          onSelectAll={handleSelectAll}
+          onOpenModal={setSelectedHistoryItem}
+          onDelete={handleDeleteItem}
         />
       )}
 
+      {historyItems.length > 0 && (
+        <div className="flex justify-center gap-4 my-10">
+          <button
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+          >
+            Anterior
+          </button>
+
+          <span className="font-semibold text-gray-700">
+            Página {page} de {pages}
+          </span>
+
+          <button
+            disabled={page >= pages}
+            onClick={() => setPage((p) => p + 1)}
+            className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+          >
+            Próxima
+          </button>
+        </div>
+      )}
+
       {selectedItems.size > 0 && (
-        <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 border-t border-gray-200 flex justify-center items-center gap-6 animate-fadeIn">
+        <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 border-t border-gray-200 flex justify-center items-center gap-6">
           <span className="font-semibold text-gray-700">
             {selectedItems.size} item(s) selecionado(s)
           </span>
+
           <button
             onClick={handleGenerateExcel}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700"
           >
             <i className="fa-solid fa-file-excel"></i> Gerar Excel
           </button>
+
           <button
             onClick={() => setSelectedItems(new Set())}
             className="text-sm text-gray-500 hover:underline"
@@ -202,12 +171,12 @@ const History = () => {
         </div>
       )}
 
-      {/* CONFIRMATION DIALOG */}
-      {confirmData && (
-        <ConfirmDialog
-          message="Tem certeza que deseja excluir este item?"
-          onCancel={() => setConfirmData(null)}
-          onConfirm={confirmDelete}
+      {selectedHistoryItem && (
+        <ClassificationModal
+          productId={selectedHistoryItem.productId}
+          item={selectedHistoryItem}
+          onClose={() => setSelectedHistoryItem(null)}
+          onSave={handleUpdateItem}
         />
       )}
     </div>
