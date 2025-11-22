@@ -1,6 +1,7 @@
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import type { PartNumber, HistoryItem } from '../types/PartNumber';
+import toast from 'react-hot-toast';
 
 // Função auxiliar para calcular a largura das colunas
 const excelFormatting = (data: any[], header: string[]) => {
@@ -38,7 +39,7 @@ export const generateExcel = (partNumbers: PartNumber[]) => {
     const validatedPartNumbers = partNumbers.filter(pn => pn.status === 'validado' && pn.classification);
 
     if (validatedPartNumbers.length === 0) {
-        alert("Nenhum Part Number validado para exportar.");
+        toast.error("Nenhum Part Number validado para exportar.");
         return;
     }
 
@@ -110,13 +111,13 @@ export const generateExcel = (partNumbers: PartNumber[]) => {
 // Gerar Excel a partir do Histórico
 export const generateHistoryExcel = (historyItems: HistoryItem[]) => {
     if (historyItems.length === 0) {
-        alert("Nenhum item selecionado para exportar.");
+        toast.error("Nenhum item selecionado para exportar.");
         return;
     }
 
     const itemsToExport = historyItems.filter(item => item.classification);
     if (itemsToExport.length === 0) {
-        alert("Nenhum dos itens selecionados possui dados de classificação completos para exportar.");
+        toast.error("Nenhum dos itens selecionados possui dados de classificação completos para exportar.");
         return;
     }
 

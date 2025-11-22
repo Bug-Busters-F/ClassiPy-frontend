@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { getHistory } from '../services/api';
 import type { HistoryItem } from '../types/PartNumber';
 import StatusBadge from './StatusBadge';
+import toast from 'react-hot-toast';
 
 const RecentPartnumber = () => {
   const [recentItems, setRecentItems] = useState<HistoryItem[]>([]);
@@ -16,6 +17,7 @@ const RecentPartnumber = () => {
       })
       .catch(() => {
         setError('Não foi possível carregar os itens recentes.');
+        toast.error("Não foi possível carregar os itens recentes.");
       })
       .finally(() => {
         setIsLoading(false);

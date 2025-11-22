@@ -7,11 +7,13 @@ import CenteredLayout from "../components/CenteredLayout";
 import ValidatePartNumber from "../pages/ValidatePartNumber";
 import { PartNumberProvider } from "../context/PartNumberContext";
 import History from "../pages/History";
+import { Toaster } from 'react-hot-toast';
 
 const AppRoutes = () => {
   return (
     <PartNumberProvider>
       <Router>
+        <Toaster position="top-center" />
         <div className="flex flex-col min-h-screen">
           <div className="fixed top-0 left-0 w-full z-50 shadow-md">
           <Navbar />
