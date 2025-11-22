@@ -5,6 +5,8 @@ import Loading from "./Loading";
 import ClassificationModal from "../components/ClassificationModal";
 import HistoryList from "../components/HistoryList";
 import { generateHistoryExcel } from "../utils/ExcelExporter";
+import toast from "react-hot-toast";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const History = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
@@ -14,6 +16,7 @@ const History = () => {
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<HistoryItem | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterDate, setFilterDate] = useState("");
+  const [confirmData, setConfirmData] = useState<null | { historyId: number }>(null);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -65,7 +68,7 @@ const History = () => {
 
   const handleGenerateExcel = () => {
     if (selectedItems.size === 0) {
-      alert("Selecione pelo menos um item classificado ou validado para gerar o Excel.");
+      toast.error("Selecione pelo menos um item para exportar.");
       return;
     }
 
@@ -75,17 +78,22 @@ const History = () => {
     );
 
     if (selectedHistoryObjects.length === 0) {
-      alert("Nenhum dos itens selecionados possui dados de classificação completos. Não é possível exportar.");
+      toast.error("Nenhum dos itens selecionados possui dados completos para exportar.");
       return;
     }
 
     generateHistoryExcel(selectedHistoryObjects);
+    toast.success("Arquivo Excel gerado com sucesso!");
   };
 
-  const handleDeleteItem = async (historyId: number) => {
-    if (!window.confirm("Tem certeza que deseja excluir?")) {
-      return;
-    }
+  const handleDeleteItem = (historyId: number) => {
+    setConfirmData({ historyId });
+  };
+
+  const confirmDelete = async () => {
+    if (!confirmData) return;
+
+    const { historyId } = confirmData;
 
     try {
       await deleteHistory(historyId);
@@ -98,10 +106,12 @@ const History = () => {
         return newSelection;
       });
 
+      toast.success("Item excluído com sucesso!");
     } catch (error) {
       console.error("Erro ao excluir item:", error);
-      alert("Não foi possível excluir o item.");
+      toast.error("Não foi possível excluir o item.");
     }
+    setConfirmData(null);
   };
 
   const handleClearFilters = () => {
@@ -190,6 +200,15 @@ const History = () => {
             Limpar seleção
           </button>
         </div>
+      )}
+
+      {/* CONFIRMATION DIALOG */}
+      {confirmData && (
+        <ConfirmDialog
+          message="Tem certeza que deseja excluir este item?"
+          onCancel={() => setConfirmData(null)}
+          onConfirm={confirmDelete}
+        />
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ClassifiedData, HistoryItem } from '../types/PartNumber';
 import { classifyPartNumber, updateProductClassification } from '../services/api';
 import Loading from '../pages/Loading';
+import toast from 'react-hot-toast';
 
 interface ClassificationModalProps {
   item: HistoryItem;
@@ -19,9 +20,10 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
     try {
       const data = await classifyPartNumber(item.partNumber);
       setClassificationData(data);
+      toast.success("Classificação concluída!");
     } catch (error) {
       console.error("Erro ao classificar:", error);
-      alert("Não foi possível classificar o item.");
+      toast.error("Não foi possível classificar o item.");
     } finally {
       setIsClassifying(false);
     }
@@ -35,6 +37,7 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
   const handleSaveChanges = async () => {
     if (!classificationData) return;
     if (!productId) {
+      toast.error("ID do produto não encontrado. Não é possível salvar.");
       return;
     }
     setIsClassifying(true);
@@ -46,9 +49,10 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
         classificationData
       );
       onSave(updatedItemFromApi);
+      toast.success("Alterações salvas com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar alterações:", error);
-      alert(`Falha ao salvar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      toast.error(`Falha ao salvar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
     } finally {
       setIsClassifying(false);
     }

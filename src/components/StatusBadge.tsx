@@ -3,7 +3,7 @@ import type { PartNumberStatus } from '../types/PartNumber'
 
 const RevisionIcon = () => <span className='text-yellow-500'><i className="fa-solid fa-circle-exclamation fa-lg"></i></span> 
 const ClassifiedIcon = () => <span className='text-blue-500'><i className="fa-solid fa-gears fa-lg"></i></span> 
-const ProcessingIcon = () => <span className='text-blue-500'><i className="fa-solid fa-spinner"></i></span> 
+const ProcessingIcon = () => <span className='text-blue-500'><i className="fa-solid fa-spinner animate-spin"></i></span> 
 const ValidateIcon = () => <span className='text-green-500'><i className="fa-solid fa-check-circle fa-lg"></i></span> 
 
 interface StatusBadgeProps{

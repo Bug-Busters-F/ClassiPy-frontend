@@ -83,8 +83,14 @@ export const saveInitialPartNumbers = async (items: InitialPartNumberPayload[]):
   } catch (error) {
     console.error('Erro ao salvar Part Numbers iniciais:', error);
     if (axios.isAxiosError(error) && error.response) {
-      throw new Error(`Erro do servidor ao salvar PNs: ${error.response.data.detail || 'Erro desconhecido'}`);
-    }
+      // throw new Error(`Erro do servidor ao salvar PNs: ${error.response.data.detail || 'Erro desconhecido'}`);
+      const raw = error.response.data.detail;
+      const friendly =
+        typeof raw === "string"
+          ? raw.slice(0, 200) + (raw.length > 200 ? "..." : "")
+          : "Erro ao salvar os Part Numbers.";
+      throw new Error(`Erro do servidor ao salvar PNs: ${friendly}`);
+      }
     throw new Error('Não foi possível registrar os Part Numbers extraídos.');
   }
 };

@@ -7,6 +7,7 @@ import { deleteProduto, classifyPartNumber, getClassificationForProduct } from "
 import { useState, useEffect } from "react";
 import ClassificationModal from "../components/ClassificationModal";
 import { generateExcel } from "../utils/ExcelExporter";
+import toast from "react-hot-toast";
 
 const ValidatePartNumber = () => {
   const { partNumbers, setPartNumbers } = usePartNumberContext();
@@ -84,21 +85,24 @@ const ValidatePartNumber = () => {
       ...currentPartNumbers,
       newPartNumber,
     ]);
+    toast.success("Novo Part-Number adicionado!");
   };
 
   const handleDeletePartNumber = async (id: string) => {
     const partNumber = partNumbers.find((pn) => pn.id === id);
     if (!partNumber?.productId) {
       setPartNumbers((current) => current.filter((pn) => pn.id !== id));
+      toast.success("Part-Number removido.");
       return;
     }
 
     try {
       await deleteProduto(partNumber.productId);
       setPartNumbers((current) => current.filter((pn) => pn.id !== id));
+      toast.success("Part-Number removido com sucesso!");
     } catch (error) {
       console.error("Erro ao deletar produto:", error);
-      alert("Erro ao deletar o produto. Veja o console para detalhes.");
+      toast.error("Erro ao deletar o produto. Veja o console para detalhes.");
     }
   };
 
@@ -123,9 +127,10 @@ const ValidatePartNumber = () => {
             : pn
         )
       );
+      toast.success(`Part-Number ${partNumberToClassify.value} classificado com sucesso!`);
     } catch (error) {
       console.error("Erro ao classificar o Part-Number:", error);
-      alert(`Falha ao classificar ${partNumberToClassify.value}:\n${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      toast.error(`Falha ao classificar ${partNumberToClassify.value}:\n${error instanceof Error ? error.message : 'Erro desconhecido'}`);
       setPartNumbers((prev) =>
         prev.map((pn) => (pn.id === id ? { ...pn, status: "revisao" } : pn))
       );
@@ -153,10 +158,19 @@ const ValidatePartNumber = () => {
 
   const handleGenerateExcel = () => {
     if (isFetchingData) {
+      toast.error("Ainda carregando dados, aguarde...");
       return;
     }
 
-    generateExcel(partNumbers)
+    const validCount = partNumbers.filter(pn => pn.status === "validado").length;
+
+    if (validCount === 0) {
+      toast.error("Nenhum Part-Number validado para gerar documento.");
+      return;
+    }
+
+    toast.success("Gerando documento Excel...");
+    generateExcel(partNumbers);
   };
 
   return (
@@ -211,8 +225,16 @@ const ValidatePartNumber = () => {
             </Link>
             <button
               onClick={handleGenerateExcel}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md cursor-pointer hover:bg-green-500 hover:-translate-y-0.5 active:translate-y-0.5 transition duration-200 ease-in-out"
               disabled={partNumbers.filter(pn => pn.status === 'validado').length === 0}
+              className="
+                flex items-center gap-2 px-4 py-2
+                bg-green-600 text-white font-semibold rounded-md
+                cursor-pointer hover:bg-green-500 hover:-translate-y-0.5 active:translate-y-0.5
+                transition duration-200 ease-in-out
+
+                disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed disabled:hover:translate-y-0
+                disabled:hover:bg-gray-300
+              "
             >
               <i className="fa-solid fa-file-excel"></i>Gerar Documento
             </button>
