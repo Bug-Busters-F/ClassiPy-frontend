@@ -43,9 +43,9 @@ const ClassipyAdvantage = () => {
             key={index}
             className="p-10 rounded-2xl text-center hover:shadow-2xl transition-all duration-300 transform hover:scale-105 border-0 shadow-lg bg-white/80 backdrop-blur-sm"
           >
-            <div className="pb-4">
+            <div className="pb-4 flex flex-col items-center justify-center">
               <div className="flex justify-center mb-6">
-                <div className="p-4 bg-gray-50 rounded-2xl">{feature.icon}</div>
+                <div className="p-4 rounded-2xl">{feature.icon}</div>
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 {feature.title}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import ButtonNav from "./ButtonNav";
+import GradientText from "./GradientText";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,16 +11,14 @@ const Navbar = () => {
   };
 
   return (
-    <div className="px-4 sm:px-[3%] py-4 flex items-center border justify-between bg-white/75 backdrop-blur-lg border-gray-200">
+    <div className="sm:px-[3%] md:px-[10%] py-4 flex items-center justify-between bg-white/75 backdrop-blur-lg">
       <Link to={"/"}>
-        <div className="flex items-center">
-          <div className="bg-blue-600 rounded-md w-10 h-10 flex items-center justify-center">
-            <span className="material-symbols-outlined text-white text-2xl">
-              lan
-            </span>
+        <div className="flex items-center justify-center space-x-0.5">
+          <div className="w-10 h-10">
+            <img src="./ClassiPyLogo.png" alt="" />
           </div>
-          <h1 className="text-xl md:text-2xl text-gray-800 font-bold pl-2">
-            ClassiPy
+          <h1 className="text-2xl md:text-2xl text-gray-800 font-bold">
+            Classi<GradientText>Py</GradientText>
           </h1>
         </div>
       </Link>

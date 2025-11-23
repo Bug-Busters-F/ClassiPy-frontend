@@ -24,7 +24,10 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
-      className="grid grid-cols-1 md:grid-cols-[0.2fr_1.2fr_1fr_0.6fr_0.6fr_0.6fr_0.6fr] items-center gap-4 p-4 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow bg-white"
+      className={`grid grid-cols-1 md:grid-cols-[0.2fr_1.2fr_1fr_0.6fr_0.6fr_0.6fr_0.6fr] 
+        items-center gap-4 p-4 border border-gray-200 rounded-xl shadow-sm 
+        hover:shadow-md transition-shadow 
+        ${selected ? "bg-blue-50" : "bg-white"}`}
     >
       <div>
         <input
@@ -48,7 +51,7 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
       <div>
         <button
           onClick={onOpenModal}
-          className="text-blue-600 hover:underline cursor-pointer"
+          className="text-blue-600 hover:underline hover:bg-blue-100 box-border rounded-lg p-2 cursor-pointer"
         >
           Ver Detalhes
         </button>

@@ -26,7 +26,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
       {/* Cabeçalho responsivo */}
       <div className="hidden md:grid md:grid-cols-[0.3fr_1.2fr_1fr_0.6fr_0.6fr_0.6fr_0.6fr] gap-4 px-1 text-sm font-semibold text-gray-600">
         <h3>
-          <input type="checkbox" onChange={onSelectAll} />
+          <input type="checkbox" onChange={onSelectAll} className="accent-blue-600" />
         </h3>
         <h3>Part Number</h3>
         <h3>Descrição</h3>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import DragAndDropUploader from "../components/DragAndDropUploader";
 import Loading from "./Loading";
-import type { PartNumber, InitialPartNumberPayload, ApiPartNumber, PartNumberStatus, InitialSaveResponseItem } from "../types/PartNumber";
+import type { PartNumber, InitialPartNumberPayload, ApiPartNumber, InitialSaveResponseItem } from "../types/PartNumber";
 import { usePartNumberContext } from "../context/PartNumberContext";
 import { saveInitialPartNumbers, uploadAndProcessPdf } from "../services/api";
 import ToastError from "../components/ToastError";
@@ -94,7 +94,7 @@ const Process = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center p-4">
       <div className="w-full flex flex-col items-center">
         <h2 className="font-bold text-4xl pb-5">Iniciar Novo Processo</h2>
         <p className="text-gray-600 font-medium text-base pb-5">

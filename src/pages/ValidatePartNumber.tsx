@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import type { HistoryItem, PartNumber, ClassifiedData } from "../types/PartNumber";
 import ValidatePartNumberList from "../components/ValidatePartNumberList";
@@ -239,7 +239,7 @@ const ValidatePartNumber = () => {
               <i className="fa-solid fa-plus"></i> Adicionar Part-Number
             </button>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 md:flex-row flex-col">
             <Link to={"/process"}>
               <button 
                 disabled={isProcessingAll}
