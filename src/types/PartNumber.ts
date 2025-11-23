@@ -79,14 +79,21 @@ export interface BackendHistoryResponse {
   } | null;
 }
 
-export interface BackendUpdatePayload {
-  partNumber: string;         
-  description: string;     
-  status: PartNumberStatus; 
-  classification: ClassificationPayload; 
-  manufacturer: ManufacturerPayload;  
+export interface BackendHistoryPaginatedResponse {
+  pns: BackendHistoryResponse[];
+  page: number;
+  limit: number;
+  pages: number;
 }
 
+
+export interface BackendUpdatePayload {
+  partNumber: string;
+  description: string;
+  status: string;
+  manufacturer: ManufacturerPayload;
+  classification: ClassificationPayload;
+}
 export interface ClassificationPayload {
   description: string; 
   ncmCode: string;

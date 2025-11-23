@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload, ClassificationPayload } from '../types/PartNumber';
+import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload, BackendHistoryPaginatedResponse } from '../types/PartNumber';
 
 //rotas api
 const API_URL = 'http://127.0.0.1:8000/';
@@ -15,26 +15,26 @@ const api = axios.create({
  */
 
 export const uploadAndProcessPdf = async (file: File): Promise<UploadApiResponse> => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const uploadFileUrl = `${API_URL}uploadfile/`;
+  const formData = new FormData();
+  formData.append('file', file);
+  const uploadFileUrl = `${API_URL}uploadfile/`;
 
-    try {
-        const response = await axios.post<UploadApiResponse>(uploadFileUrl, formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
-        return response.data; 
-    } catch (error) {
-        if (axios.isAxiosError(error) && error.response) {
-            console.error('Erro na resposta da API (upload):', error.response.data);
-            throw new Error(`Erro do servidor: ${error.response.data.detail || 'Não foi possível processar o arquivo.'}`);
-        } else {
-            console.error('Erro ao enviar o PDF:', error);
-            throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão.');
-        }
+  try {
+    const response = await axios.post<UploadApiResponse>(uploadFileUrl, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response) {
+      console.error('Erro na resposta da API (upload):', error.response.data);
+      throw new Error(`Erro do servidor: ${error.response.data.detail || 'Não foi possível processar o arquivo.'}`);
+    } else {
+      console.error('Erro ao enviar o PDF:', error);
+      throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão.');
     }
+  }
 };
 
 // --- API CALL PARA CLASSIFICAR ---
@@ -51,17 +51,17 @@ export const classifyPartNumber = async (partNumberValue: string): Promise<Class
 
     const mappedData: ClassifiedData = {
       description: backendData.descricao,
-      ncmCode: backendData.ncm,              
-      taxRate: backendData.aliquota,     
-      manufacturerName: backendData.fabricante, 
-      countryOfOrigin: "N/A (API)", 
+      ncmCode: backendData.ncm,
+      taxRate: backendData.aliquota,
+      manufacturerName: backendData.fabricante,
+      countryOfOrigin: "N/A (API)",
       fullAddress: "N/A (API)",
     };
     console.log("Classificação real recebida e mapeada:", mappedData);
     return mappedData;
   } catch (error) {
     console.error(`Erro ao classificar o Part Number ${partNumberValue}:`, error);
-    
+
     if (axios.isAxiosError(error) && error.response) {
       const errorDetail = error.response.data?.detail || 'Erro desconhecido da API';
       throw new Error(`Não foi possível obter a classificação: ${errorDetail}`);
@@ -79,12 +79,18 @@ export const saveInitialPartNumbers = async (items: InitialPartNumberPayload[]):
   try {
     const response = await axios.post<InitialSaveResponseItem[]>(saveUrl, items);
     console.log(`${items.length} Part Numbers iniciais salvos/encontrados no histórico.`);
-    return response.data; 
+    return response.data;
   } catch (error) {
     console.error('Erro ao salvar Part Numbers iniciais:', error);
     if (axios.isAxiosError(error) && error.response) {
-      throw new Error(`Erro do servidor ao salvar PNs: ${error.response.data.detail || 'Erro desconhecido'}`);
-    }
+      // throw new Error(`Erro do servidor ao salvar PNs: ${error.response.data.detail || 'Erro desconhecido'}`);
+      const raw = error.response.data.detail;
+      const friendly =
+        typeof raw === "string"
+          ? raw.slice(0, 200) + (raw.length > 200 ? "..." : "")
+          : "Erro ao salvar os Part Numbers.";
+      throw new Error(`Erro do servidor ao salvar PNs: ${friendly}`);
+      }
     throw new Error('Não foi possível registrar os Part Numbers extraídos.');
   }
 };
@@ -107,13 +113,30 @@ export const deleteProduto = async (id: number) => {
 };
 
 // --- API CALL PARA HISTORICO ---
-export const getHistory = async (): Promise<HistoryItem[]> => {
+export const getHistory = async (
+  page: number = 1,
+  limit: number = 10,
+  search?: string,
+  start_date?: string,
+): Promise<{
+  items: HistoryItem[];
+  page: number;
+  limit: number;
+  pages: number;
+}> => {
+
   const historyUrl = `${API_URL}historico/`;
+
+  const params: any = { page, limit };
+  if (search) params.search = search;
+  if (start_date) params.filter_date = start_date;
+
   try {
-    const response = await axios.get<BackendHistoryResponse[]>(historyUrl);
-  
-    const mappedItems: HistoryItem[] = response.data.map(backendItem => {
+    const response = await axios.get<BackendHistoryPaginatedResponse>(historyUrl, { params });
+
+    const mappedItems: HistoryItem[] = response.data.pns.map(backendItem => {
       let mappedClassification: ClassifiedData | null = null;
+
       if (backendItem.classification) {
         mappedClassification = {
           description: backendItem.classification.description,
@@ -135,36 +158,92 @@ export const getHistory = async (): Promise<HistoryItem[]> => {
         classification: mappedClassification
       };
     });
-    return mappedItems;
+
+    return {
+      items: mappedItems,
+      page: response.data.page,
+      limit: response.data.limit,
+      pages: response.data.pages
+    };
+
   } catch (error) {
     console.error('Erro ao buscar o histórico:', error);
     throw new Error('Não foi possível carregar o histórico.');
   }
 };
 
+
+export const getRecentPartNumbers = async () => {
+  try {
+    const response = await api.get('/produto/recent');
+    const mapped = response.data.map((backendItem: any) => {
+      let mappedClassification = null;
+
+      if (backendItem.classification) {
+        mappedClassification = {
+          description: backendItem.classification.description,
+          ncmCode: backendItem.classification.ncmCode,
+          taxRate: backendItem.classification.taxRate,
+          manufacturerName: backendItem.classification.manufacturer?.name || null,
+          countryOfOrigin: backendItem.classification.manufacturer?.country || null,
+          fullAddress: backendItem.classification.manufacturer?.address || null,
+        };
+      }
+
+      const item: HistoryItem = {
+        productId: backendItem.pro_id,
+        historyId: backendItem.historyId,
+        fileHash: backendItem.fileHash,
+        processedDate: backendItem.processedDate,
+        partNumber: backendItem.partNumber,
+        status: backendItem.status,
+        classification: mappedClassification,
+      };
+
+      return item;
+    });
+
+    return mapped;
+
+  } catch (error) {
+    console.error("Erro ao buscar itens recentes:", error);
+    throw new Error("Não foi possível buscar os Part Numbers recentes.");
+  }
+};
+
+export const deleteHistory = async (historyId: number): Promise<void> => {
+  try {
+    await api.delete(`/historico/${historyId}`);
+  } catch (error) {
+    console.error(`Erro ao deletar entrada do histórico ${historyId}: `, error);
+    throw new Error("Falha ao excluir entrada do histório.");
+  }
+};
+
 // --- API CALL PARA SALVAR/ATUALIZAR CLASSIFICAÇÃO ---
 export const updateProductClassification = async (
-  productId: number, 
+  productId: number,
   partNumber: string,
   classificationData: ClassifiedData
 ): Promise<HistoryItem> => {
-  
-  const updateUrl = `${API_URL}produto/${productId}`;
-  
-  const payload: BackendUpdatePayload = {
-    partNumber: partNumber,  
-    description: classificationData.description, 
-    status: 'validado',
 
-    classification: {
-      description: classificationData.description,
-      ncmCode: classificationData.ncmCode,
-      taxRate: classificationData.taxRate,
-    },
+  const updateUrl = `${API_URL}produto/${productId}`;
+
+  const payload: BackendUpdatePayload = {
+    partNumber,
+    description: classificationData.description,
+    status: "validado",
+
     manufacturer: {
       name: classificationData.manufacturerName,
       country: classificationData.countryOfOrigin,
-      address: classificationData.fullAddress,
+      address: classificationData.fullAddress
+    },
+    
+    classification: {
+      description: classificationData.description,
+      ncmCode: classificationData.ncmCode,
+      taxRate: classificationData.taxRate
     }
   };
 
@@ -172,7 +251,7 @@ export const updateProductClassification = async (
 
   try {
     const response = await axios.put<BackendHistoryResponse>(updateUrl, payload);
-    
+
     const backendItem = response.data;
     let mappedClassification: ClassifiedData | null = null;
     if (backendItem.classification) {
@@ -187,15 +266,15 @@ export const updateProductClassification = async (
     }
 
     const mappedHistoryItem: HistoryItem = {
-      productId: productId, 
+      productId: productId,
       historyId: backendItem.historyId,
       fileHash: backendItem.fileHash,
       processedDate: backendItem.processedDate,
-      partNumber: backendItem.partNumber, 
+      partNumber: backendItem.partNumber,
       status: backendItem.status,
       classification: mappedClassification
     };
-    
+
     return mappedHistoryItem;
 
   } catch (error) {
@@ -223,7 +302,7 @@ export const updateProductClassification = async (
 // --- MOCK API CALL PARA CLASSIFICAÇÃO ---
 export const mockClassifyPartNumber = (partNumberValue: string): Promise<ClassifiedData> => {
   console.log(`Simulando classificação para o Part Number: ${partNumberValue}`);
-  
+
   return new Promise((resolve) => {
     setTimeout(() => {
       const mockResponse: ClassifiedData = {
@@ -236,7 +315,7 @@ export const mockClassifyPartNumber = (partNumberValue: string): Promise<Classif
       };
       console.log("Simulação de classificação concluída. Retornando dados:", mockResponse);
       resolve(mockResponse);
-    }, 1500); 
+    }, 1500);
   });
 };
 

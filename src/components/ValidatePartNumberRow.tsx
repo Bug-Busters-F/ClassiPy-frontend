@@ -50,7 +50,7 @@ export const ValidatePartNumberRow: React.FC<ValidatePartNumberRowProps> = ({
         ) : isClassified ? (
           <button
             onClick={() => onOpenModal(partNumber)}
-            className="w-[50%] py-2 md:p-2 flex items-center space-x-2 justify-center rounded-lg text-green-600 bg-green-50 hover:bg-green-100 transition duration-200 ease-in-out"
+            className="w-[50%] py-2 md:p-2 flex items-center space-x-2 justify-center rounded-lg text-green-600 bg-green-50 hover:bg-green-100 transition duration-200 ease-in-out cursor-pointer"
           >
             <i className="fa-solid fa-pen-to-square fa-lg"></i>
             <p className="hidden md:inline">Validar</p>
@@ -61,7 +61,7 @@ export const ValidatePartNumberRow: React.FC<ValidatePartNumberRowProps> = ({
             disabled={isProcessing}
             className="w-[50%] py-2 md:p-2 md:px-3 flex items-center space-x-2 justify-center rounded-lg text-gray-800 cursor-pointer transition duration-200 ease-in-out enabled:hover:text-white enabled:hover:bg-blue-400 disabled:bg-gray-200 disabled:cursor-not-allowed"
           >
-            <i className={`fa-solid ${isProcessing ? 'fa-spinner fa-spin' : 'fa-gears'} fa-lg`}></i>
+            <i className={`fa-solid ${isProcessing ? 'fa-spinner animate-spin' : 'fa-gears'} fa-lg`}></i>
             <p className="hidden md:inline">{isProcessing ? "Processando" : "Classificar"}</p>
           </button>
         )}

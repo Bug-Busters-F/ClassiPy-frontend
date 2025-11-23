@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ClassifiedData, HistoryItem } from '../types/PartNumber';
 import { classifyPartNumber, updateProductClassification } from '../services/api';
 import Loading from '../pages/Loading';
+import toast from 'react-hot-toast';
 
 interface ClassificationModalProps {
   item: HistoryItem;
@@ -19,9 +20,10 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
     try {
       const data = await classifyPartNumber(item.partNumber);
       setClassificationData(data);
+      toast.success("Classificação concluída!");
     } catch (error) {
       console.error("Erro ao classificar:", error);
-      alert("Não foi possível classificar o item.");
+      toast.error("Não foi possível classificar o item.");
     } finally {
       setIsClassifying(false);
     }
@@ -35,6 +37,7 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
   const handleSaveChanges = async () => {
     if (!classificationData) return;
     if (!productId) {
+      toast.error("ID do produto não encontrado. Não é possível salvar.");
       return;
     }
     setIsClassifying(true);
@@ -46,9 +49,10 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
         classificationData
       );
       onSave(updatedItemFromApi);
+      toast.success("Alterações salvas com sucesso!");
     } catch (error) {
       console.error("Erro ao salvar alterações:", error);
-      alert(`Falha ao salvar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      toast.error(`Falha ao salvar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
     } finally {
       setIsClassifying(false);
     }
@@ -60,7 +64,7 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-2xl font-bold text-gray-800">Detalhes do Part Number</h3>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-800">&times;</button>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-800 cursor-pointer">&times;</button>
           </div>
 
           {isClassifying ? (
@@ -78,7 +82,6 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
                         <div>
                             <label className="text-gray-700 font-medium pb-2">Descrição do Produto</label>
                             <textarea id="description" name="description" value={classificationData.description} onChange={handleInputChange} rows={4} className="p-2 block w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50"/> 
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 95%)</p>
                         </div>
                     </div>
                 </div>
@@ -89,12 +92,10 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
                         <div className="flex flex-col">
                             <label htmlFor="ncmCode" className="text-gray-700 font-medium pb-2">Código NCM</label>
                             <input type="text" id="ncmCode" name="ncmCode" value={classificationData.ncmCode} onChange={handleInputChange} className="p-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 99%)</p>
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="taxRate" className="text-gray-700 font-medium pb-2">Alíquota de Imposto (%)</label>
                             <input type="number" id="taxRate" name="taxRate" value={classificationData.taxRate} onChange={handleInputChange} className="p-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 97%)</p>
                         </div>
                     </div>
                 </div>
@@ -107,31 +108,28 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
                         <div className="flex flex-col">
                             <label htmlFor="manufacturerName" className="text-gray-700 font-medium pb-2">Nome do Fabricante</label>
                             <input type="text" id="manufacturerName" name="manufacturerName" value={classificationData.manufacturerName} onChange={handleInputChange} className="p-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 92%)</p>
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="countryOfOrigin" className="text-gray-700 font-medium pb-2">País de Origem</label>
                             <input type="text" id="countryOfOrigin" name="countryOfOrigin" value={classificationData.countryOfOrigin} onChange={handleInputChange} className="p-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 96%)</p>
                         </div>
                         
                     </div>
                     <div className="flex flex-col pb-6">
                         <label htmlFor="fullAddress" className="text-gray-700 font-medium pb-2">Endereço Completo</label>
                         <textarea id="fullAddress" name="fullAddress" value={classificationData.fullAddress} onChange={handleInputChange} rows={3} className="p-2 block w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                        <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 89%)</p>
                     </div>
                 </div>
 
                 <div className="flex justify-end gap-4 mt-6">
-                    <button onClick={onClose} className="px-4 py-2 text-gray-700 font-semibold hover:bg-gray-100 rounded-md">Cancelar</button>
-                    <button onClick={handleSaveChanges} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700">Salvar Alterações</button>
+                    <button onClick={onClose} className="px-4 py-2 text-gray-700 font-semibold hover:bg-red-200 rounded-md cursor-pointer">Cancelar</button>
+                    <button onClick={handleSaveChanges} className="px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 cursor-pointer">Salvar Alterações</button>
                 </div>
             </>
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-600 mb-4">Este item ainda não foi classificado.</p>
-              <button onClick={handleClassify} className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700">
+              <button onClick={handleClassify} className="px-6 py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 cursor-pointer">
                 <i className="fa-solid fa-robot mr-2"></i>
                 Classificar com IA
               </button>

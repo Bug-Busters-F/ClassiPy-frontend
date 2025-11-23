@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import DragAndDropUploader from "../components/DragAndDropUploader";
 import Loading from "./Loading";
-import type { PartNumber, InitialPartNumberPayload, ApiPartNumber, PartNumberStatus, InitialSaveResponseItem } from "../types/PartNumber";
+import type { PartNumber, InitialPartNumberPayload, ApiPartNumber, InitialSaveResponseItem } from "../types/PartNumber";
 import { usePartNumberContext } from "../context/PartNumberContext";
 import { saveInitialPartNumbers, uploadAndProcessPdf } from "../services/api";
+import ToastError from "../components/ToastError";
+import toast from "react-hot-toast";
 
 const Process = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -21,7 +23,7 @@ const Process = () => {
 
   const handleProcessFile = async () => {
     if (!uploadedFile) {
-      alert("Por favor, selecione um arquivo primeiro.");
+      toast.error("Por favor, selecione um arquivo primeiro.");
       return;
     }
     setIsLoading(true);
@@ -35,7 +37,7 @@ const Process = () => {
       const extractedParts: ApiPartNumber[] = uploadResponse.Parts || [];
 
       if (extractedParts.length === 0) {
-        alert("Nenhum Part Number encontrado no PDF.");
+        toast.error("Nenhum Part Number encontrado no PDF.");
         setIsLoading(false);
         return;
       }
@@ -92,7 +94,7 @@ const Process = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center">
+    <div className="flex flex-col items-center justify-center p-4">
       <div className="w-full flex flex-col items-center">
         <h2 className="font-bold text-4xl pb-5">Iniciar Novo Processo</h2>
         <p className="text-gray-600 font-medium text-base pb-5">
@@ -103,7 +105,7 @@ const Process = () => {
         <DragAndDropUploader onFileSelect={handleFileSelected} />
       </div>
 
-      {error && <p className="text-red-500 mt-4">{error}</p>}
+      {error && <ToastError error={error} onClear={() => setError(null)} />}
 
       <div className="mt-8 min-w-full">
         <button

@@ -1,5 +1,6 @@
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
+import toast from "react-hot-toast";
 
 interface DragAndDropUploaderProps {
   onFileSelect: (file: File) => void;
@@ -48,11 +49,13 @@ const DragAndDropUploader: React.FC<DragAndDropUploaderProps> = ({onFileSelect,}
 
     const processFile = useCallback((file: File) => {
         if (file.type !== "application/pdf") {
-            alert("Por favor, selecione um arquivo PDF.");
+            toast.error("Por favor, selecione um arquivo PDF.");
             return;
         }
         setSelectedFile(file);
-        onFileSelect(file); 
+        onFileSelect(file);
+
+        toast.success("Arquivo PDF importado com sucesso!");
         }, [onFileSelect]
     );
 
@@ -82,7 +85,7 @@ const DragAndDropUploader: React.FC<DragAndDropUploaderProps> = ({onFileSelect,}
             <button
                 type="button"
                 onClick={openFileSelector}
-                className="px-6 py-2 w-1/2 bg-white border-2 border-blue-600 text-blue-600 rounded-md text-base font-semibold shadow-smfocus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:bg-blue-600 hover:text-white cursor-pointer transition-all duration-200">
+                className="px-6 py-2 w-1/2 flex items-center justify-center bg-white border-2 border-blue-600 text-blue-600 rounded-md text-base font-semibold shadow-smfocus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:bg-blue-600 hover:text-white cursor-pointer transition-all duration-200">
                 Selecionar Arquivo
             </button>
 
