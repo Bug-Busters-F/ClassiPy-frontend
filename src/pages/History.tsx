@@ -61,6 +61,7 @@ const History = () => {
       { icon: "⚠️", id: "classify" }
     );
   }
+  setSelectedItems(new Set());
 };
 
   useEffect(() => {
