@@ -64,7 +64,7 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-2xl font-bold text-gray-800">Detalhes do Part Number</h3>
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-800">&times;</button>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-800 cursor-pointer">&times;</button>
           </div>
 
           {isClassifying ? (
@@ -82,7 +82,6 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
                         <div>
                             <label className="text-gray-700 font-medium pb-2">Descrição do Produto</label>
                             <textarea id="description" name="description" value={classificationData.description} onChange={handleInputChange} rows={4} className="p-2 block w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50"/> 
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 95%)</p>
                         </div>
                     </div>
                 </div>
@@ -93,12 +92,10 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
                         <div className="flex flex-col">
                             <label htmlFor="ncmCode" className="text-gray-700 font-medium pb-2">Código NCM</label>
                             <input type="text" id="ncmCode" name="ncmCode" value={classificationData.ncmCode} onChange={handleInputChange} className="p-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 99%)</p>
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="taxRate" className="text-gray-700 font-medium pb-2">Alíquota de Imposto (%)</label>
                             <input type="number" id="taxRate" name="taxRate" value={classificationData.taxRate} onChange={handleInputChange} className="p-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 97%)</p>
                         </div>
                     </div>
                 </div>
@@ -111,19 +108,16 @@ const ClassificationModal = ({ item, productId, onClose, onSave }: Classificatio
                         <div className="flex flex-col">
                             <label htmlFor="manufacturerName" className="text-gray-700 font-medium pb-2">Nome do Fabricante</label>
                             <input type="text" id="manufacturerName" name="manufacturerName" value={classificationData.manufacturerName} onChange={handleInputChange} className="p-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 92%)</p>
                         </div>
                         <div className="flex flex-col">
                             <label htmlFor="countryOfOrigin" className="text-gray-700 font-medium pb-2">País de Origem</label>
                             <input type="text" id="countryOfOrigin" name="countryOfOrigin" value={classificationData.countryOfOrigin} onChange={handleInputChange} className="p-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                            <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 96%)</p>
                         </div>
                         
                     </div>
                     <div className="flex flex-col pb-6">
                         <label htmlFor="fullAddress" className="text-gray-700 font-medium pb-2">Endereço Completo</label>
                         <textarea id="fullAddress" name="fullAddress" value={classificationData.fullAddress} onChange={handleInputChange} rows={3} className="p-2 block w-full rounded-md border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-blue-50" />
-                        <p className="text-xs text-green-600 mt-2">✓ Gerado por IA (Confiança: 89%)</p>
                     </div>
                 </div>
 

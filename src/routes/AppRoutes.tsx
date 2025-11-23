@@ -15,7 +15,7 @@ const AppRoutes = () => {
       <Router>
         <Toaster position="top-center" />
         <div className="flex flex-col min-h-screen">
-          <div className="pr-5 fixed top-0 left-0 w-full z-50 shadow-md">
+          <div className="fixed top-0 left-0 w-full z-50 shadow-md">
           <Navbar />
           </div>
           <main className="flex flex-1 mt-16">

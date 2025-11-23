@@ -268,9 +268,9 @@ const History = () => {
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
-            className={`px-4 py-2 rounded-md border ${page === 1
+            className={`px-4 py-2 rounded-md border  ${page === 1
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "bg-white text-gray-700 hover:bg-gray-100"
+              : "bg-white text-gray-700 hover:bg-sky-100 cursor-pointer"
               }`}
           >
             Anterior
@@ -285,7 +285,7 @@ const History = () => {
             onClick={() => setPage((p) => p + 1)}
             className={`px-4 py-2 rounded-md border ${page === totalPages
               ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-              : "bg-white text-gray-700 hover:bg-gray-100"
+              : "bg-white text-gray-700 hover:bg-sky-100 cursor-pointer"
               }`}
           >
             Próxima
@@ -308,31 +308,51 @@ const History = () => {
 
       {/* SELEÇÃO FIXA */}
       {selectedItems.size > 0 && (
-        <div className="fixed bottom-0 left-0 w-full bg-white shadow-lg p-4 border-t border-gray-200 flex justify-center items-center gap-6 animate-fadeIn">
-          <span className="font-semibold text-gray-700">
+        <div
+          className="
+            fixed bottom-0 left-0 w-full 
+            bg-white shadow-lg p-4 border-t border-gray-200
+            flex flex-wrap justify-center items-center gap-4 
+            animate-fadeIn
+          "
+        >
+          <span className="font-semibold text-gray-700 text-center w-full sm:w-auto">
             {selectedItems.size} item(s) selecionado(s)
           </span>
           <button
             onClick={handleGenerateExcel}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700 transition-colors"
+            className="
+              flex items-center gap-2 px-4 py-2 
+              bg-green-600 text-white font-semibold rounded-md 
+              hover:bg-green-700 transition-colors
+              w-full sm:w-auto justify-center
+            "
           >
             <i className="fa-solid fa-file-excel"></i> Gerar Excel
           </button>
           <button
             onClick={() => setSelectedItems(new Set())}
-            className="text-sm text-gray-500 hover:underline"
+            className="
+              text-sm text-gray-500 hover:underline 
+              w-full sm:w-auto text-center
+            "
           >
             Limpar seleção
           </button>
+
           <button
             onClick={handleClassifySelected}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors"
+            className="
+              flex items-center gap-2 px-4 py-2 
+              bg-blue-600 text-white font-semibold rounded-md 
+              hover:bg-blue-700 transition-colors
+              w-full sm:w-auto justify-center
+            "
           >
             <i className="fa-solid fa-robot"></i> Classificar Selecionados
           </button>
         </div>
       )}
-
 
       {/* CONFIRM */}
       {confirmData && (
