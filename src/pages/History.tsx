@@ -7,6 +7,7 @@ import HistoryList from "../components/HistoryList";
 import { generateHistoryExcel } from "../utils/ExcelExporter";
 import toast from "react-hot-toast";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { classifyPartNumber } from "../services/api";
 
 const History = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
@@ -25,6 +26,58 @@ const History = () => {
   const [filterDate, setFilterDate] = useState("");
 
   const [confirmData, setConfirmData] = useState<null | { historyId: number }>(null);
+
+  const handleClassifySelected = async () => {
+    if (selectedItems.size === 0) {
+      toast.error("Selecione ao menos um item.");
+      return;
+    }
+
+    const itemsToClassify = historyItems.filter(item =>
+      selectedItems.has(item.historyId)
+    );
+
+    const alreadyClassified = itemsToClassify.some(
+      item => item.status === 'classificado' || item.status === 'validado'
+    );
+
+    if (alreadyClassified) {
+      toast.error("A seleção contém itens que já foram classificados ou validados.");
+      return;
+    }
+
+    toast.loading("Classificando itens...", { id: "classify" });
+
+    const failures: { partNumber: string; error: any }[] = [];
+
+    for (const item of itemsToClassify) {
+      try {
+        const updated = await classifyPartNumber(item.partNumber);
+
+        setHistoryItems(prev =>
+          prev.map(p =>
+            p.historyId === item.historyId
+              ? { ...p, status: "classificado", classification: updated }
+              : p
+          )
+        );
+
+      } catch (err: any) {
+        failures.push({ partNumber: item.partNumber, error: err });
+        toast.error(`Falha ao classificar ${item.partNumber}`);
+      }
+    }
+
+    if (failures.length === 0) {
+      toast.success("Classificação concluída!", { id: "classify" });
+    } else {
+      toast(
+        `Classificação concluída com falhas: ${failures.length} PN(s). Veja erros acima.`,
+        { icon: "⚠️", id: "classify" }
+      );
+    }
+    setSelectedItems(new Set());
+  };
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -84,11 +137,20 @@ const History = () => {
     }
 
     const selectedHistoryObjects = historyItems.filter(
-      (item) => selectedItems.has(item.historyId) && item.classification
+      (item) => selectedItems.has(item.historyId)
+    );
+    
+    if (selectedHistoryObjects.length === 0) {
+        toast.error("Nenhum item encontrado para a seleção atual.");
+        return;
+    }
+
+    const allValidated = selectedHistoryObjects.every(
+        item => item.status === 'validado' && item.classification
     );
 
-    if (selectedHistoryObjects.length === 0) {
-      toast.error("Nenhum dos itens selecionados possui dados completos para exportar.");
+    if (!allValidated) {
+      toast.error("Para gerar o Excel, todos os itens selecionados devem estar validados e possuir dados de classificação.");
       return;
     }
 
@@ -130,7 +192,7 @@ const History = () => {
   const handleClearFilters = () => {
     setSearchTerm("");
     setFilterDate("");
-    setPage(1); 
+    setPage(1);
   };
 
 
@@ -166,7 +228,7 @@ const History = () => {
           value={searchTerm}
           onChange={(e) => {
             setSearchTerm(e.target.value);
-            setPage(1); 
+            setPage(1);
           }}
           className="w-full md:w-2/3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
@@ -206,11 +268,10 @@ const History = () => {
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
-            className={`px-4 py-2 rounded-md border ${
-              page === 1
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 rounded-md border ${page === 1
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
           >
             Anterior
           </button>
@@ -222,11 +283,10 @@ const History = () => {
           <button
             disabled={page === totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className={`px-4 py-2 rounded-md border ${
-              page === totalPages
-                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-                : "bg-white text-gray-700 hover:bg-gray-100"
-            }`}
+            className={`px-4 py-2 rounded-md border ${page === totalPages
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-white text-gray-700 hover:bg-gray-100"
+              }`}
           >
             Próxima
           </button>
@@ -263,6 +323,12 @@ const History = () => {
             className="text-sm text-gray-500 hover:underline"
           >
             Limpar seleção
+          </button>
+          <button
+            onClick={handleClassifySelected}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <i className="fa-solid fa-robot"></i> Classificar Selecionados
           </button>
         </div>
       )}
