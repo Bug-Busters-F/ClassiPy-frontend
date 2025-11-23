@@ -79,6 +79,14 @@ export interface BackendHistoryResponse {
   } | null;
 }
 
+export interface BackendHistoryPaginatedResponse {
+  pns: BackendHistoryResponse[];
+  page: number;
+  limit: number;
+  pages: number;
+}
+
+
 export interface BackendUpdatePayload {
   partNumber: string;
   description: string;

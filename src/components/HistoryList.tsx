@@ -1,3 +1,4 @@
+
 import React from "react";
 import { AnimatePresence } from "framer-motion";
 import type { HistoryItem } from "../types/PartNumber";
@@ -43,7 +44,7 @@ const HistoryList: React.FC<HistoryListProps> = ({
             selected={selectedItems.has(item.historyId)}
             onSelect={() => onSelectItem(item.historyId)}
             onOpenModal={() => onOpenModal(item)}
-            onDelete={(onDelete)}
+            onDelete={() => onDelete(item.historyId)}
           />
         ))}
       </AnimatePresence>

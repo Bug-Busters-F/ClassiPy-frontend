@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload } from '../types/PartNumber';
+import type { ClassifiedData, HistoryItem, InitialPartNumberPayload, InitialSaveResponseItem, UploadApiResponse, BackendClassificationResponse, BackendHistoryResponse, BackendUpdatePayload, BackendHistoryPaginatedResponse } from '../types/PartNumber';
 
 //rotas api
 const API_URL = 'http://127.0.0.1:8000/';
@@ -114,20 +114,29 @@ export const deleteProduto = async (id: number) => {
 
 // --- API CALL PARA HISTORICO ---
 export const getHistory = async (
+  page: number = 1,
+  limit: number = 10,
   search?: string,
   start_date?: string,
-): Promise<HistoryItem[]> => {
+): Promise<{
+  items: HistoryItem[];
+  page: number;
+  limit: number;
+  pages: number;
+}> => {
+
   const historyUrl = `${API_URL}historico/`;
 
-  const params: any = {};
+  const params: any = { page, limit };
   if (search) params.search = search;
   if (start_date) params.filter_date = start_date;
 
   try {
-    const response = await axios.get<BackendHistoryResponse[]>(historyUrl, { params });
+    const response = await axios.get<BackendHistoryPaginatedResponse>(historyUrl, { params });
 
-    const mappedItems: HistoryItem[] = response.data.map(backendItem => {
+    const mappedItems: HistoryItem[] = response.data.pns.map(backendItem => {
       let mappedClassification: ClassifiedData | null = null;
+
       if (backendItem.classification) {
         mappedClassification = {
           description: backendItem.classification.description,
@@ -149,12 +158,20 @@ export const getHistory = async (
         classification: mappedClassification
       };
     });
-    return mappedItems;
+
+    return {
+      items: mappedItems,
+      page: response.data.page,
+      limit: response.data.limit,
+      pages: response.data.pages
+    };
+
   } catch (error) {
     console.error('Erro ao buscar o histórico:', error);
     throw new Error('Não foi possível carregar o histórico.');
   }
 };
+
 
 export const getRecentPartNumbers = async () => {
   try {
