@@ -7,6 +7,7 @@ import HistoryList from "../components/HistoryList";
 import { generateHistoryExcel } from "../utils/ExcelExporter";
 import toast from "react-hot-toast";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { classifyPartNumber } from "../services/api";
 
 const History = () => {
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
@@ -25,6 +26,51 @@ const History = () => {
   const [filterDate, setFilterDate] = useState("");
 
   const [confirmData, setConfirmData] = useState<null | { historyId: number }>(null);
+
+  const handleClassifySelected = async () => {
+  if (selectedItems.size === 0) {
+    toast.error("Selecione ao menos um item.");
+    return;
+  }
+
+  toast.loading("Classificando itens...", { id: "classify" });
+
+  const failures: { partNumber: string; error: any }[] = [];
+
+  const itemsToClassify = historyItems.filter(item =>
+    selectedItems.has(item.historyId)
+  );
+
+  // Executa um por um, sem interromper
+  for (const item of itemsToClassify) {
+    try {
+      const updated = await classifyPartNumber(item.partNumber);
+
+      setHistoryItems(prev =>
+        prev.map(p =>
+          p.historyId === item.historyId
+            ? { ...p, status: "classificado", classification: updated }
+            : p
+        )
+      );
+
+    } catch (err: any) {
+      failures.push({ partNumber: item.partNumber, error: err });
+      toast.error(`Falha ao classificar ${item.partNumber}`);
+    }
+  }
+
+  // Finalização
+  if (failures.length === 0) {
+    toast.success("Classificação concluída!", { id: "classify" });
+  } else {
+    toast(
+      `Classificação concluída com falhas: ${failures.length} PN(s). Veja erros acima.`,
+      { icon: "⚠️", id: "classify" }
+    );
+  }
+  setSelectedItems(new Set());
+};
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -264,6 +310,12 @@ const History = () => {
           >
             Limpar seleção
           </button>
+         <button
+  onClick={handleClassifySelected}
+  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-colors"
+>
+  <i className="fa-solid fa-robot"></i> Classificar Selecionados
+</button>
         </div>
       )}
 

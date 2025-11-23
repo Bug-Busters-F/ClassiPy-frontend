@@ -31,7 +31,7 @@ const HistoryRow: React.FC<HistoryRowProps> = ({
           type="checkbox"
           checked={selected}
           onChange={onSelect}
-          disabled={!(item.status === "classificado" || item.status === "validado")}
+          disabled={false}
           className="accent-blue-600"
         />
       </div>
