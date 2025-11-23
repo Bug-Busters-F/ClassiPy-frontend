@@ -80,13 +80,12 @@ export interface BackendHistoryResponse {
 }
 
 export interface BackendUpdatePayload {
-  partNumber: string;         
-  description: string;     
-  status: PartNumberStatus; 
-  classification: ClassificationPayload; 
-  manufacturer: ManufacturerPayload;  
+  partNumber: string;
+  description: string;
+  status: string;
+  manufacturer: ManufacturerPayload;
+  classification: ClassificationPayload;
 }
-
 export interface ClassificationPayload {
   description: string; 
   ncmCode: string;

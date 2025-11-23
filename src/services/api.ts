@@ -213,19 +213,20 @@ export const updateProductClassification = async (
   const updateUrl = `${API_URL}produto/${productId}`;
 
   const payload: BackendUpdatePayload = {
-    partNumber: partNumber,
+    partNumber,
     description: classificationData.description,
-    status: 'validado',
+    status: "validado",
 
-    classification: {
-      description: classificationData.description,
-      ncmCode: classificationData.ncmCode,
-      taxRate: classificationData.taxRate,
-    },
     manufacturer: {
       name: classificationData.manufacturerName,
       country: classificationData.countryOfOrigin,
-      address: classificationData.fullAddress,
+      address: classificationData.fullAddress
+    },
+    
+    classification: {
+      description: classificationData.description,
+      ncmCode: classificationData.ncmCode,
+      taxRate: classificationData.taxRate
     }
   };
 
